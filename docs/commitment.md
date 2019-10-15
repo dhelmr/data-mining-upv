@@ -18,18 +18,26 @@ We agreed on using Python for the development of the the required programs. The 
 
 # Time plan
 
-The following plan gives an overview about the necessary tasks and their respective targeted due date:
+The following plan gives an overview about the necessary tasks.
 
-1. Pre-Processing: 1 week (due date: 21/10/2019), responsible person: Marius
+1. Pre-Processing, responsible person: Marius
     1. 1st exercise: Implementation and analysis
     2. 2nd exercise: BoW Implementation; Analysis of Sparse ARFF
     3. 3rd exercise: TF-IDF Implementation; Comparision BoW vs TF-IDF
     4. 4th exercise: Discuss Filtering
 2. Clustering: 2 weeks (due date: 04/11/2019), responsible person: Daniel
     1. Implementation of the cluster algorithm
-    2. Quality indices, implementation of PCA
-    3. Application of the inferred model
 3. Evaluation and Experiments: 1 week (due date: 10/11/2019), responsible person: Simon
+    1. Quality indices, implementation of PCA
+    2. Application of the inferred model
+
+These steps will be carried out in weekly cycles. The dues dates for each cycle are:
+
+1. 21/10/2019
+2. 28/10/2019
+3. 04/11/2019
+ 
+The remaining days will be used for finalizing the report.
 
 As these tasks will depend on each other and for an efficient functioning of the group it is required that each member contributes equally to the work, we decided against asigning special roles or responsibilites to the group members. Everyone is fully responsible for each part of the project. The names behind this tasks only indicate who is responsible for a good group functioning of the corresponding task.
 
