@@ -25,7 +25,7 @@ The following plan gives an overview about the necessary tasks.
     2. 2nd exercise: BoW Implementation; Analysis of Sparse ARFF
     3. 3rd exercise: TF-IDF Implementation; Comparision BoW vs TF-IDF
     4. 4th exercise: Discuss Filtering
-2. Clustering: 2 weeks (due date: 04/11/2019), responsible person: Daniel
+2. Clustering: 2 weeks, responsible person: Daniel
     1. Implementation of the cluster algorithm
 3. Evaluation and Experiments: 1 week (due date: 10/11/2019), responsible person: Simon
     1. Quality indices, implementation of PCA
