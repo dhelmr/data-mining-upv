@@ -13,6 +13,13 @@ VECTOR_SIZE = 100
 
 
 def labelling_tweets(tweets):
+    """
+    labels tweets with the document index (integer)
+    to use this function you have to make sure, that there are no more NaN entries within the tweets
+
+    :param tweets: tweets to be labeled
+    :return: labeled tweets
+    """
 
     labeled_tweets = []
     # t:tweet; i:unique document id
@@ -37,13 +44,12 @@ def initialize_d2v_model(tweets_labeled, dm=0, negative=5, min_count=2, alpha=0.
     """
 
     # get amount of cpu cores & initialize d2v model
-    # cores = multiprocessing.cpu_count()
-    # print(f"INFO: {cores} cores are used")
-    print("flag1")
+    cores = multiprocessing.cpu_count()
+    print(f"INFO: {cores} cores are used")
+
     model_d2v = Doc2Vec(dm=dm, vector_size=VECTOR_SIZE, negative=negative, min_count=min_count,
                     alpha=alpha, min_alpha=min_alpha)
 
-    print("flag2")
     # load tweets into model to create vocabulary
     model_d2v.build_vocab(tweets_labeled)
     print("INFO: d2c model vocab build")
@@ -51,15 +57,16 @@ def initialize_d2v_model(tweets_labeled, dm=0, negative=5, min_count=2, alpha=0.
     return model_d2v
 
 
-def train_model_d2v(model_d2v, tweets_labeled, save_model=False, path="",  max_epochs=30):
+def train_model_d2v(model_d2v, tweets_labeled, save_model=False, path="resources/models/model_d2v.model",  max_epochs=30):
     """
+    trains a given d2v model with the given labeled text data / tweets
 
-    :param model_d2v:
-    :param tweets_labeled:
-    :param save_model:
-    :param path:
-    :param max_epochs:
-    :return:
+    :param model_d2v: initialized (untrained) d2v model
+    :param tweets_labeled: labeled tweets to use for training
+    :param save_model: option to save trained model
+    :param path: to save trained model
+    :param max_epochs: maximum amount of training epochs
+    :return: trained and ready to use d2v model
     """
 
     for epoch in range(max_epochs):
