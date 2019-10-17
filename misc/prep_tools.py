@@ -65,14 +65,14 @@ def clean_tweets(data, save_to_file=False, stopwords_stemming=False, path="resou
 
     # concat to data frame and drop empty entries
     data = pd.DataFrame({'label': labels, 'text': tweets})
-    data = drop_empty_entries(data)
+    data_clean = drop_empty_entries(data)
 
     # save csv file if demanded
     if save_to_file is True:
-        data.to_csv(path, encoding="utf-8")
+        data_clean.to_csv(path, encoding="utf-8")
         print(f"INFO: cleaned tweets saved to path: {path}")
 
-    return data
+    return data_clean
 
 
 def drop_empty_entries(data):
@@ -85,6 +85,7 @@ def drop_empty_entries(data):
 
     temp = len(data)
     data.dropna(inplace=True)
+    data = data[~data.isin(['NaN', 'NaT', 'nan', 'nat', ' ', '']).any(axis=1)]
     data.reset_index(drop=True, inplace=True)
     print(f"INFO: {temp - len(data)} NaN-Tweets were deleted\n"
           f"INFO: Final amount of tweets: {len(data)}")

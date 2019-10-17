@@ -18,10 +18,10 @@ data = pd.read_csv(path, names=["label", "id", "date", "query", "user", "text"],
 data.head()
 
 # %% DATA CLEANING
-df = clean_tweets(data, save_to_file=True, path="resources/test_stop.csv", stopwords_stemming=True)
+df = clean_tweets(data, save_to_file=True, path="resources/test_new.csv", stopwords_stemming=True)
 
 # %% READ CLEANED DATA
-df = pd.read_csv("resources/test_stop.csv", index_col=0)
+df = pd.read_csv("resources/test.csv", index_col=0)
 df.dropna(inplace=True)
 df.head()
 
