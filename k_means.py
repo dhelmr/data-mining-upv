@@ -35,13 +35,13 @@ class K_means():
 
         self.locked = True
         self.validate_data(data)
-        self.array = np.array(data)
+        self.np_data = np.array(data)
 
         # read dimension of feature vectors
         self.n = len(data[0])
 
         # stores the cluster centroids
-        self.centroids = self.init_centroids(data)
+        self.centroids = self.init_centroids()
 
         # maps each data instance index to the centroid index
         self.cluster_mapping = np.zeros(len(data))
@@ -49,14 +49,18 @@ class K_means():
         abort = False
         cycle = 0
         while not abort:
-            clusters_changed = False
             self.clear_instance_map()
+            
+            # determine cluster memeberships
+            clusters_changed = False
             for instance_i in range(len(data)):
                 closest_centroid_i = self.closest_centroid(instance_i)
                 if self.cluster_mapping[instance_i] != closest_centroid_i:
                     self.cluster_mapping[instance_i] = closest_centroid_i
                     clusters_changed = True
                 self.instance_map[closest_centroid_i].add(instance_i)
+            
+            # calculate new centroids for each cluster
             for cluster_i in self.instance_map:
                 new_centroid = self.recalc_centroid(cluster_i)
                 self.centroids[cluster_i] = new_centroid
@@ -77,17 +81,17 @@ class K_means():
     def recalc_centroid(self, cluster_i):
         total = np.zeros(self.n)
         for instance_i in self.instance_map[cluster_i]:
-            total = total + self.array[instance_i]
+            total = total + self.np_data[instance_i]
         return total/len(self.instance_map[cluster_i])
 
-    def init_centroids(self, data):
+    def init_centroids(self):
         centroids = []
         if self.init_strategy == Init_Strategy.RANDOM:
             # TODO this has potentially infinite runtime, but takes less space than making a in-memory copy of the data
             while len(centroids) != self.k:
-                index = random.randint(0, len(data)-1)
-                random_instance = data[index]
-                if random_instance not in centroids:
+                index = random.randint(0, len(self.np_data)-1)
+                random_instance = self.np_data[index].tolist()
+                if (random_instance not in centroids):
                     centroids.append(random_instance)
         else:
             raise Exception(f"{self.init_strategy} not supported yet")
@@ -111,7 +115,7 @@ class K_means():
     def distance(self, instance_i, centroid_i):
         total = 0
         for feature_i in range(self.n):
-            base = abs(self.array[instance_i][feature_i] -
+            base = abs(self.np_data[instance_i][feature_i] -
                        self.centroids[centroid_i][feature_i])
             total = total + math.pow(base, self.m)
         return math.pow(total, 1/self.m)  # TODO float arithemtic
