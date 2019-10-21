@@ -49,6 +49,8 @@ class K_means():
         abort = False
         cycle = 0
         while not abort:
+            # The instance map is used to keep track which instances belong to a cluster.
+            # That is needed later for calculating the centroids of the cluster.
             self.clear_instance_map()
             
             # determine cluster memeberships
@@ -73,17 +75,21 @@ class K_means():
         self.locked = False
         return self.centroids
 
+    # clears the instance map
     def clear_instance_map(self):
         self.instance_map = dict()
         for i in range(self.k):
             self.instance_map[i] = set()
 
+    # Calculates the centroid of an cluster by averaging all instances of that cluster
     def recalc_centroid(self, cluster_i):
         total = np.zeros(self.n)
         for instance_i in self.instance_map[cluster_i]:
             total = total + self.np_data[instance_i]
         return total/len(self.instance_map[cluster_i])
 
+    # Initializes the centroids according to the initalization strategy (self.init_strategy)
+    # See the Init_Strategy enum for possible values
     def init_centroids(self):
         centroids = []
         if self.init_strategy == Init_Strategy.RANDOM:
@@ -97,11 +103,14 @@ class K_means():
             raise Exception(f"{self.init_strategy} not supported yet")
         return centroids
 
+    # checks if the data is suited for running a clustering algorithm
     def validate_data(self, data):
         if len(data) < self.k:
             raise Exception(
                 f"Cannot group {len(data)} data instances into {self.k} clusters!")
 
+    # determines the closest centroid for a data instance according to the current clusters
+    # the result is the index of the corresponding centroid of the self.centroids array
     def closest_centroid(self, instance_i):
         min_centroid_i = 0
         min_distance = self.distance(instance_i, centroid_i=0)
@@ -112,6 +121,9 @@ class K_means():
                 min_distance = distance
         return min_centroid_i
 
+    # calculates the Minkowski distance between an instance and a centroid
+    # both arguments must be passed as an index of the corresponding list (self.np_data, self.centroids)
+    # the parameter m (or alpha) is read from self.m
     def distance(self, instance_i, centroid_i):
         total = 0
         for feature_i in range(self.n):
@@ -119,3 +131,4 @@ class K_means():
                        self.centroids[centroid_i][feature_i])
             total = total + math.pow(base, self.m)
         return math.pow(total, 1/self.m)  # TODO float arithemtic
+
