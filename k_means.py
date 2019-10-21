@@ -28,6 +28,7 @@ class K_means():
         self.max_iterations = max_iterations
         self.treshold = threshold
         self.locked = False
+        self.instances_by_cluster = dict()
 
     def run(self, data):
         if self.locked == True:
@@ -60,10 +61,10 @@ class K_means():
                 if self.cluster_mapping[instance_i] != closest_centroid_i:
                     self.cluster_mapping[instance_i] = closest_centroid_i
                     clusters_changed = True
-                self.instance_map[closest_centroid_i].add(instance_i)
+                self.instances_by_cluster[closest_centroid_i].add(instance_i)
             
             # calculate new centroids for each cluster
-            for cluster_i in self.instance_map:
+            for cluster_i in self.instances_by_cluster:
                 new_centroid = self.recalc_centroid(cluster_i)
                 self.centroids[cluster_i] = new_centroid
                 print(f"New centroid for {cluster_i}: {new_centroid}")
@@ -77,16 +78,16 @@ class K_means():
 
     # clears the instance map
     def clear_instance_map(self):
-        self.instance_map = dict()
+        self.instances_by_cluster = dict()
         for i in range(self.k):
-            self.instance_map[i] = set()
+            self.instances_by_cluster[i] = set()
 
     # Calculates the centroid of an cluster by averaging all instances of that cluster
     def recalc_centroid(self, cluster_i):
         total = np.zeros(self.n)
-        for instance_i in self.instance_map[cluster_i]:
+        for instance_i in self.instances_by_cluster[cluster_i]:
             total = total + self.instances[instance_i]
-        return total/len(self.instance_map[cluster_i])
+        return total/len(self.instances_by_cluster[cluster_i])
 
     # Initializes the centroids according to the initalization strategy (self.init_strategy)
     # See the Init_Strategy enum for possible values
