@@ -35,7 +35,7 @@ class K_means():
 
         self.locked = True
         self.validate_data(data)
-        self.np_data = np.array(data)
+        self.instances = np.array(data)
 
         # read dimension of feature vectors
         self.n = len(data[0])
@@ -85,7 +85,7 @@ class K_means():
     def recalc_centroid(self, cluster_i):
         total = np.zeros(self.n)
         for instance_i in self.instance_map[cluster_i]:
-            total = total + self.np_data[instance_i]
+            total = total + self.instances[instance_i]
         return total/len(self.instance_map[cluster_i])
 
     # Initializes the centroids according to the initalization strategy (self.init_strategy)
@@ -95,8 +95,8 @@ class K_means():
         if self.init_strategy == Init_Strategy.RANDOM:
             # TODO this has potentially infinite runtime, but takes less space than making a in-memory copy of the data
             while len(centroids) != self.k:
-                index = random.randint(0, len(self.np_data)-1)
-                random_instance = self.np_data[index].tolist()
+                index = random.randint(0, len(self.instances)-1)
+                random_instance = self.instances[index].tolist()
                 if (random_instance not in centroids):
                     centroids.append(random_instance)
         else:
@@ -122,12 +122,12 @@ class K_means():
         return min_centroid_i
 
     # calculates the Minkowski distance between an instance and a centroid
-    # both arguments must be passed as an index of the corresponding list (self.np_data, self.centroids)
+    # both arguments must be passed as an index of the corresponding list (self.instances, self.centroids)
     # the parameter m (or alpha) is read from self.m
     def distance(self, instance_i, centroid_i):
         total = 0
         for feature_i in range(self.n):
-            base = abs(self.np_data[instance_i][feature_i] -
+            base = abs(self.instances[instance_i][feature_i] -
                        self.centroids[centroid_i][feature_i])
             total = total + math.pow(base, self.m)
         return math.pow(total, 1/self.m)  # TODO float arithemtic
