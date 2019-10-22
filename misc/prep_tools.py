@@ -102,11 +102,13 @@ def apply_train_test_split(data, test_size=0.2, random_state=None):
     :param random_state: set if reproducibility is needed
     :return: data frames containing tweets for training and testing/validation
     """
+    x = data.text
+    y = data.label
 
-    data_train, data_test = train_test_split(data, test_size=test_size, random_state=random_state)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=test_size, random_state=random_state)
 
     print(f"Total amount of tweets: {len(data)}\n"
-          f"Training data:          {len(data_train)}\n"
-          f"Test/Validation data:   {len(data_test)}\n")
+          f"Training data:          {len(x_train)}\n"
+          f"Test/Validation data:   {len(x_test)}\n")
 
-    return data_train, data_test
+    return x_train, x_test, y_train, y_test
