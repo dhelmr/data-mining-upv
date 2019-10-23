@@ -42,6 +42,9 @@ class K_means():
 
         # stores the cluster centroids
         self.centroids = self.init_centroids()
+        
+        # store the initial centroid configuration for analysis purposes
+        self.initial_centroids = self.centroids.copy() 
 
         # maps each data instance index to the centroid index
         self.cluster_mapping = np.zeros(len(data))
@@ -73,7 +76,7 @@ class K_means():
             self.after_centroid_calculation()
 
         self.locked = False
-        return self.centroids
+        return cycle
 
     # clears the instance map
     def clear_instance_map(self):
