@@ -3,32 +3,31 @@ import random
 import numpy as np
 import math
 
-
 class Init_Strategy(Enum):
     RANDOM = 1,
     SPACE_DIVISION = 2,
     DOUBLE_K_FIRST = 3
 
-
-class Intergroup_Distance(Enum):
-    SINGLE_LINK = 1,
-    COMPLETE_LINK = 2
-
-
 class K_means():
     def __init__(self, k=5, m=2,
                  init_strategy=Init_Strategy.RANDOM,
-                 intergroup_distance=Intergroup_Distance.SINGLE_LINK,
                  max_iterations=50000,
                  threshold=0.001):
         self.k = k
         self.m = m
         self.init_strategy = init_strategy
-        self.intergroup_distance = intergroup_distance
         self.max_iterations = max_iterations
         self.treshold = threshold
         self.locked = False
         self.instances_by_cluster = dict()
+
+        # initialize functions that are called at different steps of the algorithm with 
+        # a dummy function that does no do anything
+        # the functions can be used as "hooks" to debug or visualize the current state of the algorithm
+        def pass_fn():
+            pass
+        self.after_centroid_calculation = pass_fn 
+        self.after_cluster_membership = pass_fn
 
     def run(self, data):
         if self.locked == True:
@@ -62,16 +61,16 @@ class K_means():
                     self.cluster_mapping[instance_i] = closest_centroid_i
                     clusters_changed = True
                 self.instances_by_cluster[closest_centroid_i].add(instance_i)
-            
+            self.after_cluster_membership()
+
             # calculate new centroids for each cluster
             for cluster_i in self.instances_by_cluster:
                 new_centroid = self.recalc_centroid(cluster_i)
                 self.centroids[cluster_i] = new_centroid
-                print(f"New centroid for {cluster_i}: {new_centroid}")
             if (not clusters_changed) or (cycle >= self.max_iterations):  # TODO implement treshold
                 abort = True
             cycle = cycle + 1
-            print(cycle, clusters_changed, self.max_iterations, self.cluster_mapping)
+            self.after_centroid_calculation()
 
         self.locked = False
         return self.centroids
@@ -132,4 +131,3 @@ class K_means():
                        self.centroids[centroid_i][feature_i])
             total = total + math.pow(base, self.m)
         return math.pow(total, 1/self.m)  # TODO float arithemtic
-
