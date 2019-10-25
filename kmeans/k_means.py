@@ -3,10 +3,12 @@ import random
 import numpy as np
 import math
 
+
 class Init_Strategy(Enum):
     RANDOM = 1,
     SPACE_DIVISION = 2,
     DOUBLE_K_FIRST = 3
+
 
 class K_means():
     def __init__(self, k=5, m=2,
@@ -19,15 +21,20 @@ class K_means():
         self.max_iterations = max_iterations
         self.treshold = threshold
         self.locked = False
-        self.instances_by_cluster = dict()
 
-        # initialize functions that are called at different steps of the algorithm with 
+        # initialize functions that are called at different steps of the algorithm with
         # a dummy function that does no do anything
         # the functions can be used as "hooks" to debug or visualize the current state of the algorithm
         def pass_fn():
             pass
-        self.after_centroid_calculation = pass_fn 
+        self.after_centroid_calculation = pass_fn
         self.after_cluster_membership = pass_fn
+
+        # declare other variables that will be filled after/while run() is called
+        self.total_error = -1
+        self.instances_by_cluster = dict()
+        self.iterations_run = -1
+        self.cluster_mapping = None
 
     def run(self, data):
         if self.locked == True:
@@ -42,9 +49,9 @@ class K_means():
 
         # stores the cluster centroids
         self.centroids = self.init_centroids()
-        
+
         # store the initial centroid configuration for analysis purposes
-        self.initial_centroids = self.centroids.copy() 
+        self.initial_centroids = self.centroids.copy()
 
         # maps each data instance index to the centroid index
         self.cluster_mapping = np.zeros(len(data))
@@ -55,26 +62,35 @@ class K_means():
             # The instance map is used to keep track which instances belong to a cluster.
             # That is needed later for calculating the centroids of the cluster.
             self.clear_instance_map()
-            
-            # determine cluster memeberships
+
+            # This variable will store the aggregated distances between the instances and its centroids
+            # thus, it is a measurement how "good" or "bad" the clustering is
+            self.total_error = 0
+
+            # determine cluster memberships
             clusters_changed = False
             for instance_i in range(len(data)):
-                closest_centroid_i = self.closest_centroid(instance_i)
+                closest_centroid_i, distance = self.closest_centroid(
+                    instance_i)
                 if self.cluster_mapping[instance_i] != closest_centroid_i:
                     self.cluster_mapping[instance_i] = closest_centroid_i
                     clusters_changed = True
                 self.instances_by_cluster[closest_centroid_i].add(instance_i)
+                self.total_error += distance
             self.after_cluster_membership()
 
             # calculate new centroids for each cluster
             for cluster_i in self.instances_by_cluster:
-                new_centroid = self.recalc_centroid(cluster_i)
+                new_centroid = self.calc_centroid(cluster_i)
                 self.centroids[cluster_i] = new_centroid
+            self.after_centroid_calculation()
+
+            # check if the abort criterion is reached
             if (not clusters_changed) or (cycle >= self.max_iterations):  # TODO implement treshold
                 abort = True
             cycle = cycle + 1
-            self.after_centroid_calculation()
 
+        self.iterations_run = cycle
         self.locked = False
         return cycle
 
@@ -85,7 +101,7 @@ class K_means():
             self.instances_by_cluster[i] = set()
 
     # Calculates the centroid of an cluster by averaging all instances of that cluster
-    def recalc_centroid(self, cluster_i):
+    def calc_centroid(self, cluster_i):
         total = np.zeros(self.n)
         for instance_i in self.instances_by_cluster[cluster_i]:
             total = total + self.instances[instance_i]
@@ -113,7 +129,9 @@ class K_means():
                 f"Cannot group {len(data)} data instances into {self.k} clusters!")
 
     # determines the closest centroid for a data instance according to the current clusters
-    # the result is the index of the corresponding centroid of the self.centroids array
+    # the result is a tuple (centroid_index, distance) which contains:
+    # 1.the index of the corresponding centroid of the self.centroids array
+    # 2.the distance to this centroid
     def closest_centroid(self, instance_i):
         min_centroid_i = 0
         min_distance = self.distance(instance_i, centroid_i=0)
@@ -122,7 +140,7 @@ class K_means():
             if distance < min_distance:
                 min_centroid_i = centroid_i
                 min_distance = distance
-        return min_centroid_i
+        return (min_centroid_i, min_distance)
 
     # calculates the Minkowski distance between an instance and a centroid
     # both arguments must be passed as an index of the corresponding list (self.instances, self.centroids)
@@ -134,3 +152,36 @@ class K_means():
                        self.centroids[centroid_i][feature_i])
             total = total + math.pow(base, self.m)
         return math.pow(total, 1/self.m)  # TODO float arithemtic
+
+
+class K_means_multiple_times():
+    def __init__(self, k=5, m=2,
+                 init_strategy=Init_Strategy.RANDOM,
+                 max_iterations=50000,
+                 threshold=0.001):
+        self.k = k
+        self.m = m
+        self.init_strategy = init_strategy
+        self.max_iterations = max_iterations
+        self.treshold = threshold
+
+    def run(self, n_iterations, data):
+        """
+        Runs the K_means algorithm n times and returns the best-performing k_means instance
+        (the one with the lowest total distance error)
+        """
+        best_k_means = None
+        for iterations in range(0, n_iterations):
+            k_means = K_means(k=self.k,
+                             init_strategy=self.init_strategy,
+                             max_iterations=self.max_iterations,
+                             m=self.m, threshold=self.treshold)
+            k_means.run(data)
+            if best_k_means == None:
+                best_k_means = k_means
+                continue
+                
+            if k_means.total_error < best_k_means.total_error:
+                best_k_means = k_means
+        
+        return best_k_means
