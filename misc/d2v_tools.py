@@ -22,6 +22,8 @@ def labelling_tweets(tweets):
     """
 
     labeled_tweets = []
+    print("INFO: tweet labeling started")
+
     # t:tweet; i:unique document id
     for i, t in zip(tweets.index, tweets):
         labeled_tweets.append(TaggedDocument(t.split(), ["{}".format(i)]))
@@ -35,13 +37,15 @@ def initialize_d2v_model(tweets_labeled, dm=0, negative=5, min_count=2, alpha=0.
     initializes an d2v model with the given parameter. Also creates a vocab based on the given tweets
 
     :param tweets_labeled: labeled tweets used to create vocab
-    :param dm:
+    :param dm: 0 -> DM 'distributed memory', 1 -> DBOW 'distributed bag of words'
     :param negative:
     :param min_count: minimum appearance to be considered for vocab
-    :param alpha:
+    :param alpha: learning rate
     :param min_alpha: minimal learning rate alpha
     :return: initialized d2v model
     """
+
+    print(f"INFO: d2v model (dm={dm}) initialization and vocab building started")
 
     # get amount of cpu cores & initialize d2v model
     cores = multiprocessing.cpu_count()
@@ -52,7 +56,7 @@ def initialize_d2v_model(tweets_labeled, dm=0, negative=5, min_count=2, alpha=0.
 
     # load tweets into model to create vocabulary
     model_d2v.build_vocab(tweets_labeled)
-    print("INFO: d2c model vocab build")
+    print("INFO: d2c model initialization and vocab building finished")
 
     return model_d2v
 
@@ -69,6 +73,8 @@ def train_model_d2v(model_d2v, tweets_labeled, save_model=False, path="resources
     :return: trained and ready to use d2v model
     """
 
+    print("INFO: d2c model training started")
+
     for epoch in range(max_epochs):
         print(f"INFO: training epoch {epoch + 1} of {max_epochs}")
 
@@ -80,7 +86,7 @@ def train_model_d2v(model_d2v, tweets_labeled, save_model=False, path="resources
 
     # if option selected: save model to given path
     if save_model is True:
-        model_d2v.save("models/doc2vec/dbow.model")
+        model_d2v.save(path)
         print(f"INFO: d2v-model saved to path: {path}")
 
     return model_d2v
@@ -88,6 +94,7 @@ def train_model_d2v(model_d2v, tweets_labeled, save_model=False, path="resources
 
 def get_vectors(model, data):
     """
+    CLASS IS ONLY NEEDED FOR CLASSIFICATION (if applied)
     function to create vector representations of given data. The vectors trained by the doc2vec model are used
 
     :param model: d2v model
@@ -95,7 +102,7 @@ def get_vectors(model, data):
     :return: matrix containing the data as vector representation (each row represents one text file or tweet)
     """
 
-    # delete temporary training data of model
+    # delete temporary training data of model (no more updates, only querying, reduce memory usage)
     model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
 
     # empty matrix with dimension 'amount tweets' x 200
