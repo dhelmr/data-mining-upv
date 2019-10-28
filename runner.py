@@ -30,21 +30,23 @@ df.head()
 # %% TRAIN TEST SPLIT (FOR DOC2VEC MODEL TRAINING)
 # build_vocab läuft in ein memory error, deshalb werden hier tweets sampled (1.6 Mio läuft irgendwie bei mir nicht
 # df = df.sample(n=60000)
-# TODO: Data split before we do doc2vec etc. - implemented with train test split (train used fr d2v)
 
-tweets_train, tweets_test, y_train, y_test = apply_train_test_split(df, test_size=0.3, random_state=42)
+df_training = df.sample(frac=0.7, random_state=42)
+tweets_train = df_training.text
+y_train = df_training.label
+
+df_testing = df.drop(df_training.index).reset_index(drop=True)
 
 # %% PREPARE TRAIN TWEETS AND APPLY DOC2VEC INITIALIZATION
 tweets_labeled = labelling_tweets(tweets_train)
 
 # %% BUILD D2V MODEL (DBOW - DISTRIBUTED BAG OF WORDS, dm=0)
-# TODO: SkipGram and other model
-model_d2v = initialize_d2v_model(tweets_labeled, dm=0)
-model_d2v = train_model_d2v(model_d2v, tweets_labeled, save_model=True, max_epochs=3)
+model_d2v_dbow = initialize_d2v_model(tweets_labeled, dm=0)
+model_d2v_dbow = train_model_d2v(model_d2v_dbow, tweets_labeled, save_model=True, max_epochs=3)
 
 # %% BUILD D2V MODEL (DM - DISTRIBUTED MEMORY, dm=1)
-model_d2v = initialize_d2v_model(tweets_labeled, dm=1)
-model_d2v = train_model_d2v(model_d2v, tweets_labeled, save_model=True, max_epochs=3)
+model_d2v_dm = initialize_d2v_model(tweets_labeled, dm=1)
+model_d2v_dm = train_model_d2v(model_d2v_dm, tweets_labeled, save_model=True, max_epochs=3)
 
 # %% GET VECTORS FOR CLUSTERING
 
@@ -52,5 +54,14 @@ model_d2v = Doc2Vec.load("resources/models/model_d2v.model")
 
 # %%
 # TODO: apply Doc2Vec on test data - still locking for solution to apply on whole data frame
+#  (export into method/function)
 
-df['col'].apply(model_d2v.infer_vector)
+df_testing['token'] = df_testing["text"].apply(lambda x: x.split())
+print("INFO: tweet token created")
+
+df_testing["vectors"] = df_testing["token"].apply(lambda x: model_d2v.infer_vector(x))
+print("INFO: tweet vectors created")
+
+# %%
+
+
