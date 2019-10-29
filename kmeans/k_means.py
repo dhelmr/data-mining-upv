@@ -153,6 +153,11 @@ class K_means():
             total = total + math.pow(base, self.m)
         return math.pow(total, 1/self.m)  # TODO float arithemtic
 
+    # returns the cluster membership of an instance after run() was executed
+    def get_centroid(self, instance_i):
+        centroid_i = self.cluster_mapping[instance_i]
+        return self.centroids[centroid_i]
+
 
 class K_means_multiple_times():
     def __init__(self, k=5, m=2,
