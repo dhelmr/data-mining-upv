@@ -8,11 +8,9 @@ import pandas as pd
 from gensim.models import Doc2Vec
 
 from misc.prep_tools import clean_tweets
-from misc.prep_tools import apply_train_test_split
 from misc.d2v_tools import labelling_tweets
 from misc.d2v_tools import initialize_d2v_model
 from misc.d2v_tools import train_model_d2v
-from misc.d2v_tools import get_vectors
 
 # %% READING DATA
 path = "resources/raw/Sentiment140.csv"
@@ -32,21 +30,26 @@ df.head()
 # df = df.sample(n=60000)
 
 df_training = df.sample(frac=0.7, random_state=42)
-tweets_train = df_training.text
-y_train = df_training.label
+df_training.to_csv("resources/training.csv")
 
 df_testing = df.drop(df_training.index).reset_index(drop=True)
+df_training.to_csv("resources/test.csv")
+
+tweets_train = df_training.text
+y_train = df_training.label
 
 # %% PREPARE TRAIN TWEETS AND APPLY DOC2VEC INITIALIZATION
 tweets_labeled = labelling_tweets(tweets_train)
 
 # %% BUILD D2V MODEL (DBOW - DISTRIBUTED BAG OF WORDS, dm=0)
 model_d2v_dbow = initialize_d2v_model(tweets_labeled, dm=0)
-model_d2v_dbow = train_model_d2v(model_d2v_dbow, tweets_labeled, save_model=True, max_epochs=3)
+model_d2v_dbow = train_model_d2v(model_d2v_dbow, tweets_labeled,
+                                 save_model=True, path="resources/models/model_d2v_dbow10.model", max_epochs=10)
 
 # %% BUILD D2V MODEL (DM - DISTRIBUTED MEMORY, dm=1)
 model_d2v_dm = initialize_d2v_model(tweets_labeled, dm=1)
-model_d2v_dm = train_model_d2v(model_d2v_dm, tweets_labeled, save_model=True, max_epochs=3)
+model_d2v_dm = train_model_d2v(model_d2v_dm, tweets_labeled,
+                               save_model=True, path="resources/models/model_d2v_dm10.model", max_epochs=10)
 
 # %% GET VECTORS FOR CLUSTERING
 
