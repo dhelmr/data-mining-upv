@@ -52,12 +52,11 @@ model_d2v_dm = train_model_d2v(model_d2v_dm, tweets_labeled,
                                save_model=True, path="resources/models/model_d2v_dm10.model", max_epochs=10)
 
 # %% GET VECTORS FOR CLUSTERING
-
-model_d2v = Doc2Vec.load("resources/models/model_d2v.model")
-
-# %%
 # TODO: apply Doc2Vec on test data - still locking for solution to apply on whole data frame
 #  (export into method/function)
+
+model_d2v = Doc2Vec.load("resources/models/model_d2v.model")
+df_testing = pd.read_csv("resources/clean/tweets_test_clean.csv", index_col=0)
 
 df_testing['token'] = df_testing["text"].apply(lambda x: x.split())
 print("INFO: tweet token created")
