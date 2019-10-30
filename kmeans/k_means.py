@@ -2,6 +2,8 @@ from enum import Enum
 import random
 import numpy as np
 import math
+import pickle
+import pprint
 
 
 class Init_Strategy(Enum):
@@ -22,21 +24,14 @@ class K_means():
         self.treshold = threshold
         self.locked = False
 
-        # initialize functions that are called at different steps of the algorithm with
-        # a dummy function that does no do anything
-        # the functions can be used as "hooks" to debug or visualize the current state of the algorithm
-        def pass_fn():
-            pass
-        self.after_centroid_calculation = pass_fn
-        self.after_cluster_membership = pass_fn
-
         # declare other variables that will be filled after/while run() is called
         self.total_error = -1
         self.instances_by_cluster = dict()
         self.iterations_run = -1
         self.cluster_mapping = None
 
-    def run(self, data):
+    def run(self, data, after_centroid_calculation=lambda k_means, cycle: None,
+            after_cluster_membership=lambda k_means, cycle: None):
         if self.locked == True:
             raise Exception("clustering already is running")
 
@@ -77,13 +72,13 @@ class K_means():
                     clusters_changed = True
                 self.instances_by_cluster[closest_centroid_i].add(instance_i)
                 self.total_error += distance
-            self.after_cluster_membership()
+            after_cluster_membership(self, cycle)
 
             # calculate new centroids for each cluster
             for cluster_i in self.instances_by_cluster:
                 new_centroid = self.calc_centroid(cluster_i)
                 self.centroids[cluster_i] = new_centroid
-            self.after_centroid_calculation()
+            after_centroid_calculation(self, cycle)
 
             # check if the abort criterion is reached
             if (not clusters_changed) or (cycle >= self.max_iterations):  # TODO implement treshold
@@ -158,6 +153,20 @@ class K_means():
         centroid_i = self.cluster_mapping[instance_i]
         return self.centroids[centroid_i]
 
+    def to_file(self, file_name):
+        file = open(file_name, 'wb')
+        pickle.dump(self, file)
+        file.close()
+
+    def __str__(self):
+        return f"""<K-Means object>
+Initialized with: k={self.k}, m={self.m}, init_strategy={self.init_strategy}
+iterations run: {self.iterations_run}, total_error={self.total_error}"""
+
+
+def from_file(file):
+    return pickle.load(file)
+
 
 class K_means_multiple_times():
     def __init__(self, k=5, m=2,
@@ -170,23 +179,27 @@ class K_means_multiple_times():
         self.max_iterations = max_iterations
         self.treshold = threshold
 
-    def run(self, n_iterations, data):
+    def run(self, n_iterations, data, between_iter_fn=lambda iteration, k_means: None,
+            after_centroid_calculation=lambda k_means, cycle: None, after_cluster_membership=lambda k_means,cycle: None):
         """
         Runs the K_means algorithm n times and returns the best-performing k_means instance
         (the one with the lowest total distance error)
         """
         best_k_means = None
-        for iterations in range(0, n_iterations):
+        for iteration in range(0, n_iterations):
             k_means = K_means(k=self.k,
-                             init_strategy=self.init_strategy,
-                             max_iterations=self.max_iterations,
-                             m=self.m, threshold=self.treshold)
-            k_means.run(data)
+                              init_strategy=self.init_strategy,
+                              max_iterations=self.max_iterations,
+                              m=self.m, threshold=self.treshold)
+            k_means.run(data, after_centroid_calculation=after_centroid_calculation,
+                        after_cluster_membership=after_cluster_membership)
             if best_k_means == None:
                 best_k_means = k_means
-                continue
-                
-            if k_means.total_error < best_k_means.total_error:
+
+            isBest = k_means.total_error < best_k_means.total_error
+            if isBest:
                 best_k_means = k_means
-        
+
+            between_iter_fn(iteration, k_means)
+
         return best_k_means
