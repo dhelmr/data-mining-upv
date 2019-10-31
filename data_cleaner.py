@@ -1,38 +1,37 @@
 """
-file contains all functions (tools) for data editing and data preparing/pre processing
-
+Cleans a given data frame
 """
 
 import re
+import argparse
 import pandas as pd
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
-from sklearn.model_selection import train_test_split
 from resources.contractions_mapping import contractions_mapping
 
 
-def clean_tweets(data, save_to_file=False, stopwords_stemming=False, path="resources/Sentiment140_clean.csv"):
+def clean_tweets(data, stopwords_stemming=False):
     """
     This function prepares and cleans all tweets within the given data frame. Contractions handling, lowercase
     delete special signs, @s with username, https, word stemming, stopwords removal, ...
 
     :param data: pandas data frame containing raw Sentiment140 tweets
-    :param save_to_file: option to save cleaned data
     :param stopwords_stemming: set True if stopwords removal and word stemming should be applied
-    :param path: path to save cleaned data
     :return: cleaned/prepared pandas data frame containing tweets
     """
 
     tweets = []
     labels = []
+
+    print("INFO: Start cleaning tweets")
     data['label'].replace([4], 1, inplace=True)
     stop_words = set(stopwords.words('english'))
     ps = PorterStemmer()
 
     for i in range(len(data.text)):
         if (i + 1) % 100000 == 0:
-            print(f"INFO:{i + 1} of {len(data.text)} tweets have been processed.")
+            print(f"INFO: {i + 1} of {len(data.text)} tweets have been processed.")
 
         # apply different cleaning steps on each tweet
         tweet = data.text[i]
@@ -61,16 +60,10 @@ def clean_tweets(data, save_to_file=False, stopwords_stemming=False, path="resou
         tweets.append(tweet)
         labels.append(label)
 
-    print(f"INFO:{len(data.text)} of {len(data.text)} tweets have been processed.")
-
     # concat to data frame and drop empty entries
+    print(f"INFO: {len(data)} of {len(data)} tweets have been processed.")
     data = pd.DataFrame({'label': labels, 'text': tweets})
     data_clean = drop_empty_entries(data)
-
-    # save csv file if demanded
-    if save_to_file is True:
-        data_clean.to_csv(path, encoding="utf-8")
-        print(f"INFO: cleaned tweets saved to path: {path}")
 
     return data_clean
 
@@ -79,11 +72,13 @@ def drop_empty_entries(data):
     """
     function to remove rows containing at least one NaN value from a data frame
 
-    :param data: data frame
+    :param data: data frame containing possible NaN entries
     :return: data frame without NaN rows
     """
 
     temp = len(data)
+
+    print("INFO: Drop empty tweets (NaN rows)")
     data.dropna(inplace=True)
     data = data[~data.isin(['NaN', 'NaT', 'nan', 'nat', ' ', '']).any(axis=1)]
     data.reset_index(drop=True, inplace=True)
@@ -93,22 +88,23 @@ def drop_empty_entries(data):
     return data
 
 
-def apply_train_test_split(data, test_size=0.2, random_state=None):
-    """
-    function to split data set into a training and test/validation set
+def main(src_path, dest_path):
+    print("### DATA CLEANING ###")
 
-    :param data: complete data set
-    :param test_size: percentage to be used for testing
-    :param random_state: set if reproducibility is needed
-    :return: data frames containing tweets for training and testing/validation
-    """
-    x = data.text
-    y = data.label
+    print(f"INFO: Read data from path: {src_path}")
+    data_raw = pd.read_csv(src_path, encoding="ISO-8859–1")
+    data_clean = clean_tweets(data_raw, stopwords_stemming=True)
+    data_clean.to_csv(dest_path, encoding="utf-8")
+    print(f"INFO: Cleaned tweets saved to path: {dest_path}")
 
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=test_size, random_state=random_state)
+    print("### ENDED DATA CLEANING ###")
 
-    print(f"Total amount of tweets: {len(data)}\n"
-          f"Training data:          {len(x_train)}\n"
-          f"Test/Validation data:   {len(x_test)}\n")
 
-    return x_train, x_test, y_train, y_test
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Data Cleaner')
+    parser.add_argument('src_path', help='enter path to raw data')
+    parser.add_argument('-tgt', '--dest_path', default="resources/clean/cleaned.csv",
+                        help='enter path where to save cleaned tweets')
+    args = parser.parse_args()
+
+    main(args.src_path, args.dest_path)

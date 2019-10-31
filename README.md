@@ -2,7 +2,7 @@
 
 ## Download data set
 
-Download [the data set from kaggle](https://www.kaggle.com/kazanova/sentiment140) and extract the file (~250MB) to the directory `data/clean`.
+Download [the data set from kaggle](https://www.kaggle.com/kazanova/sentiment140) and extract the file (~250MB) to the directory `resources/raw`.
 
 ## Generate the pdf from markdown
 
