@@ -10,21 +10,22 @@ import sys
 import time
 
 
-def main(src, dest_folder, k, m, n_iter, max_iter):
+def main(src, dest_folder, k, m, n_iter, max_iter, threshold, verbose):
     data = read_src_data(src)
     vecs = data["vectors"].values
 
     print("### Vectors loaded, start clustering...")
 
     def kmeans_between(k_means, cycle):
-        sys.stdout.write(".")
-        sys.stdout.flush()
+        if verbose == False:
+            sys.stdout.write(".")
+            sys.stdout.flush()
 
     def between_iter_fn(i, tmp_kmeans):
         print(f"\n### {i}/{n_iter} iteration with result: ###")
         print(tmp_kmeans)
 
-    km = K_means(k=k, m=m, max_iterations=max_iter)  # TODO more parameter
+    km = K_means(k=k, m=m, max_iterations=max_iter, threshold = threshold, verbose = verbose)  # TODO more parameter
     result = km.run(n_iter, vecs, between_iter_fn=between_iter_fn,
                     after_cluster_membership=kmeans_between)
     print(f"Best result: {result}")
@@ -40,20 +41,6 @@ def read_src_data(path):
     return pickle.load(open(path, "rb"))
 
 
-def old():
-    csv_data = pd.read_csv(path, index_col=0)
-    vecs = list()
-    for index, row in csv_data.iterrows():
-        print(index, row)
-        vec_str = row["vectors"]
-        vec_str = str.replace(vec_str, "\[", "")
-        vec_str = str.replace(vec_str, "\]", "")
-        vec_str = str.replace(vec_str, "\n", "")
-        print(vec_str)
-        np_array = np.fromstring(vec_str, dtype=float)
-        print(np_array)
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run k-means clustering')
     parser.add_argument(
@@ -66,7 +53,11 @@ if __name__ == '__main__':
     parser.add_argument("--n_iter", dest="iter", default=10, type=int,
                         help="Run k-means n times. Afterwards the best result is chosen.")
     parser.add_argument("--max_iter", dest="max_iter", default=30, type=int,
-                        help="Maximum number of iterations inside one k-means run. Afterwards the best result is chosen.")
+                        help="Maximum number of iterations inside one k-means run.")
+    parser.add_argument("--threshold", dest="threshold", default=0.1, type=float,
+                        help="Threshold for centroid changes. A k-means run will terminate if each centroid change of the last iteration is less than this threshold value.")
+    parser.add_argument("--verbose", dest="verbose", default=True, type=True,
+                        help="Verbose output on/off")
     args = parser.parse_args()
 
-    main(args.src, args.dest, args.k, args.m, args.iter, args.max_iter)
+    main(args.src, args.dest, args.k, args.m, args.iter, args.max_iter, args.threshold, args.verbose)

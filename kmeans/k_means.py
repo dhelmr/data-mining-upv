@@ -16,7 +16,8 @@ class K_means():
     def __init__(self, k=5, m=2,
                  init_strategy=Init_Strategy.RANDOM,
                  max_iterations=50000,
-                 threshold=0.001):
+                 threshold=0.001,
+                 verbose = False):
         self.k = k
         self.m = m
         self.init_strategy = init_strategy
@@ -172,7 +173,8 @@ class K_means_multiple_times():
     def __init__(self, k=5, m=2,
                  init_strategy=Init_Strategy.RANDOM,
                  max_iterations=50000,
-                 threshold=0.001):
+                 threshold=0.001,
+                 verbose = False):
         self.k = k
         self.m = m
         self.init_strategy = init_strategy
@@ -190,7 +192,7 @@ class K_means_multiple_times():
             k_means = K_means(k=self.k,
                               init_strategy=self.init_strategy,
                               max_iterations=self.max_iterations,
-                              m=self.m, threshold=self.treshold)
+                              m=self.m, threshold=self.treshold, verbose=verbose)
             k_means.run(data, after_centroid_calculation=after_centroid_calculation,
                         after_cluster_membership=after_cluster_membership)
             if best_k_means == None:
