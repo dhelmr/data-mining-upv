@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import IntEnum
 import random
 import numpy as np
 import math
@@ -6,7 +6,7 @@ import pickle
 import pprint
 
 
-class Init_Strategy(Enum):
+class Init_Strategy(IntEnum):
     RANDOM = 1,
     SPACE_DIVISION = 2,
     DOUBLE_K_FIRST = 3
@@ -52,6 +52,9 @@ class K_means():
 
         # maps each data instance index to the centroid index
         self.cluster_mapping = np.zeros(len(data))
+
+        if self.verbose == True:
+            print("Start clustering ", self)
 
         abort = False
         cycle = 0
@@ -100,6 +103,7 @@ class K_means():
                 if self.threshold > 0 and self.threshold > max_centroids_change:
                     centroids_distance = self.distance(
                         old_centroid, new_centroid)
+                    print(old_centroid, new_centroid, "Distance of centroids", centroids_distance)
                     max_centroids_change = max(
                         max_centroids_change, centroids_distance)
 
@@ -135,9 +139,12 @@ class K_means():
         total = np.zeros(self.n)
         for instance_i in self.instances_by_cluster[cluster_i]:
             total = total + self.instances[instance_i]
-        return total/len(self.instances_by_cluster[cluster_i])
-
-    # Initializes the centroids according to the initalization strategy (self.init_strategy)
+        n_instances = len(self.instances_by_cluster[cluster_i])
+        if n_instances == 0:
+            return self.centroids[cluster_i]
+        return total/n_instances
+        
+    # Initializes the centroids according to the initialization strategy (self.init_strategy)
     # See the Init_Strategy enum for possible values
     def init_centroids(self):
         centroids = []
@@ -148,6 +155,28 @@ class K_means():
                 random_instance = self.instances[index].tolist()
                 if (random_instance not in centroids):
                     centroids.append(random_instance)
+        elif self.init_strategy == Init_Strategy.SPACE_DIVISION:
+            # determine bounds of the data
+            max_values = np.zeros(self.n)
+            min_values = np.zeros(self.n)
+            for feature_i in range(0, self.n):
+                for instance_i in range(0, len(self.instances)):
+                    val = self.instances[instance_i][feature_i]
+                    if max_values[feature_i] < val:
+                        max_values[feature_i] = val
+                    if min_values[feature_i] > val:
+                        min_values[feature_i] = val
+                print(self.instances[instance_i])
+            # create centroids
+            matrix = np.zeros([self.k, self.n])
+            for feature_i in range(0, self.n):
+                max_min_distance = abs(max_values[feature_i]-min_values[feature_i])
+                step = max_min_distance / self.k
+                for centroid_i in range(0, self.k):
+                    matrix[centroid_i][feature_i] = min_values[feature_i] + step * centroid_i
+            # convert the matrix to a list, but keep the list entries as numpy arrays
+            # the further implementation of the algorithm expects the centroids to be stored in a list
+            centroids = list(matrix)
         else:
             raise Exception(f"{self.init_strategy} not supported yet")
         return centroids
@@ -200,7 +229,7 @@ class K_means():
 
     def __str__(self):
         return f"""<K-Means object>
-Initialized with: k={self.k}, m={self.m}, init_strategy={self.init_strategy}
+Initialized with: k={self.k}, m={self.m}, threshold={self.threshold}, init_strategy={self.init_strategy}
 iterations run: {self.iterations_run}, total_error={self.total_error}"""
 
 

@@ -22,8 +22,8 @@ def filter(x,y):
     return not (x > instances_n*0.5 and x < instances_n*0.6) and not (y > instances_n*0.5 and y < instances_n*0.6)
 data = generate_random_data(instances_n, filter)
 
-if __name__ == "main":
-    #plt.ion()
+if __name__ == "__main__":
+    plt.ion()
     plt.clf()
 
     def plot_k_means(k_means):
@@ -42,12 +42,11 @@ if __name__ == "main":
         plt.draw()
 
     # execute k-means clustering
-    k_means = K_means(k=4,m=1)
-    def plot():
+    k_means = K_means(k=5,m=2, init_strategy=2)
+    def plot(k_means, cycle):
         plot_k_means(k_means)
-    k_means.after_centroid_calculation = plot
-    k_means.after_cluster_membership = plot
-    k_means.run(data)
+
+    k_means.run(data, after_centroid_calculation = plot, after_cluster_membership = plot)
 
     plot_k_means(k_means)
     plt.show()

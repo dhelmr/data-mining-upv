@@ -1,4 +1,5 @@
 from kmeans.k_means import K_means_multiple_times as K_means
+import kmeans.k_means as k_means
 import argparse
 import pandas as pd
 import collections
@@ -10,13 +11,13 @@ import sys
 import time
 
 
-def main(src, dest_folder, k, m, n_iter, max_iter, threshold, verbose):
+def main(src, dest_folder, k, m, n_iter, max_iter, threshold, verbose, init_strategy):
     data = read_src_data(src)
     vecs = data["vectors"].values
 
     print("### Vectors loaded, start clustering...")
 
-    km = K_means(k=k, m=m, max_iterations=max_iter, threshold = threshold, verbose = verbose)  # TODO more parameter
+    km = K_means(k=k, m=m, max_iterations=max_iter, threshold = threshold, verbose = verbose, init_strategy=init_strategy)  # TODO more parameter
     result = km.run(n_iter, vecs)
     print(f"Best result: {result}")
 
@@ -32,6 +33,7 @@ def read_src_data(path):
 
 
 if __name__ == '__main__':
+    
     parser = argparse.ArgumentParser(description='Run k-means clustering')
     parser.add_argument(
         '--src', dest='src', help='path of the pre-processed and clean data with its doc2vec values', default="resources/tweets_test_vecs.vec")
@@ -48,6 +50,9 @@ if __name__ == '__main__':
                         help="Threshold for centroid changes. A k-means run will terminate if each centroid change of the last iteration is less than this threshold value.")
     parser.add_argument("--verbose", dest="verbose", default=True, type=bool,
                         help="Verbose output on/off")
+    init_strategy_values = ", ".join( [f"{s.value}={s.name}" for s in k_means.Init_Strategy])
+    parser.add_argument("--init_strategy", dest="init_strategy", default=k_means.Init_Strategy.RANDOM, type=int,
+                        help="Init Strategy, one of "+init_strategy_values)
     args = parser.parse_args()
 
-    main(args.src, args.dest, args.k, args.m, args.iter, args.max_iter, args.threshold, args.verbose)
+    main(args.src, args.dest, args.k, args.m, args.iter, args.max_iter, args.threshold, args.verbose, args.init_strategy)
