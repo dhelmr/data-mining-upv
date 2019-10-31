@@ -16,18 +16,8 @@ def main(src, dest_folder, k, m, n_iter, max_iter, threshold, verbose):
 
     print("### Vectors loaded, start clustering...")
 
-    def kmeans_between(k_means, cycle):
-        if verbose == False:
-            sys.stdout.write(".")
-            sys.stdout.flush()
-
-    def between_iter_fn(i, tmp_kmeans):
-        print(f"\n### {i}/{n_iter} iteration with result: ###")
-        print(tmp_kmeans)
-
     km = K_means(k=k, m=m, max_iterations=max_iter, threshold = threshold, verbose = verbose)  # TODO more parameter
-    result = km.run(n_iter, vecs, between_iter_fn=between_iter_fn,
-                    after_cluster_membership=kmeans_between)
+    result = km.run(n_iter, vecs)
     print(f"Best result: {result}")
 
     # TODO more parameter in file
@@ -54,9 +44,9 @@ if __name__ == '__main__':
                         help="Run k-means n times. Afterwards the best result is chosen.")
     parser.add_argument("--max_iter", dest="max_iter", default=30, type=int,
                         help="Maximum number of iterations inside one k-means run.")
-    parser.add_argument("--threshold", dest="threshold", default=0.1, type=float,
+    parser.add_argument("--threshold", dest="threshold", default=0.001, type=float,
                         help="Threshold for centroid changes. A k-means run will terminate if each centroid change of the last iteration is less than this threshold value.")
-    parser.add_argument("--verbose", dest="verbose", default=True, type=True,
+    parser.add_argument("--verbose", dest="verbose", default=True, type=bool,
                         help="Verbose output on/off")
     args = parser.parse_args()
 
