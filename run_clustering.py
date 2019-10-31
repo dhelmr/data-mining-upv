@@ -57,7 +57,7 @@ def old():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run k-means clustering')
     parser.add_argument(
-        '--src', dest='src', help='path of the pre-processed and clean data with its doc2vec values', default="resources/tweets_test_vecs.csv")
+        '--src', dest='src', help='path of the pre-processed and clean data with its doc2vec values', default="resources/tweets_test_vecs.vec")
     parser.add_argument('--dest', dest='dest', default="resources/clustering/",
                         help='folder where to save the clustering result')
     parser.add_argument('-k', dest="k", default=10, type=int)
