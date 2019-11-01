@@ -86,7 +86,7 @@ class K_means():
                     self.cluster_mapping[instance_i] = closest_centroid_i
                     clusters_changed += 1
                 self.instances_by_cluster[closest_centroid_i].add(instance_i)
-                self.total_error += distance
+                self.total_error += pow(distance,2)
             if self.verbose == True:
                 print(
                     f"{clusters_changed} cluster memberships changed, total_error={self.total_error}")
