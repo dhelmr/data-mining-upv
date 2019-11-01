@@ -4,6 +4,7 @@ import numpy as np
 import math
 import pickle
 import pprint
+import copy
 
 
 class Init_Strategy(IntEnum):
@@ -33,7 +34,8 @@ class K_means():
         self.cluster_mapping = None
 
     def run(self, data, after_centroid_calculation=lambda k_means, cycle: None,
-            after_cluster_membership=lambda k_means, cycle: None):
+            after_cluster_membership=lambda k_means, cycle: None,
+            centroid_initialization=None):
         if self.locked == True:
             raise Exception("clustering already is running")
 
@@ -44,8 +46,11 @@ class K_means():
         # read dimension of feature vectors
         self.n = len(data[0])
 
-        # stores the cluster centroids
-        self.centroids = self.init_centroids()
+        # initialize centroids
+        if centroid_initialization != None:
+            self.initial_centroids = copy.deepcopy(centroid_initialization)
+        else:
+            self.centroids = self.init_centroids()
 
         # store the initial centroid configuration for analysis purposes
         self.initial_centroids = self.centroids.copy()
@@ -60,7 +65,8 @@ class K_means():
         cycle = 0
         while not abort:
             if self.verbose == True:
-                print(f">> Start cycleStart cycle {cycle+1}/{self.max_iterations}")
+                print(
+                    f">> Start cycleStart cycle {cycle+1}/{self.max_iterations}")
             # The instance map is used to keep track which instances belong to a cluster.
             # That is needed later for calculating the centroids of the cluster.
             self.clear_instance_map()
@@ -103,7 +109,8 @@ class K_means():
                 if self.threshold > 0 and self.threshold > max_centroids_change:
                     centroids_distance = self.distance(
                         old_centroid, new_centroid)
-                    print(old_centroid, new_centroid, "Distance of centroids", centroids_distance)
+                    print(old_centroid, new_centroid,
+                          "Distance of centroids", centroids_distance)
                     max_centroids_change = max(
                         max_centroids_change, centroids_distance)
 
@@ -143,7 +150,7 @@ class K_means():
         if n_instances == 0:
             return self.centroids[cluster_i]
         return total/n_instances
-        
+
     # Initializes the centroids according to the initialization strategy (self.init_strategy)
     # See the Init_Strategy enum for possible values
     def init_centroids(self):
@@ -170,13 +177,19 @@ class K_means():
             # create centroids
             matrix = np.zeros([self.k, self.n])
             for feature_i in range(0, self.n):
-                max_min_distance = abs(max_values[feature_i]-min_values[feature_i])
+                max_min_distance = abs(
+                    max_values[feature_i]-min_values[feature_i])
                 step = max_min_distance / self.k
                 for centroid_i in range(0, self.k):
-                    matrix[centroid_i][feature_i] = min_values[feature_i] + step * centroid_i
+                    matrix[centroid_i][feature_i] = min_values[feature_i] + \
+                        step * centroid_i
             # convert the matrix to a list, but keep the list entries as numpy arrays
             # the further implementation of the algorithm expects the centroids to be stored in a list
             centroids = list(matrix)
+        elif self.init_strategy == Init_Strategy.DOUBLE_K_FIRST:
+            initializer = DoubleKInitialization(self)
+            initializer.run()
+            return initializer.get_centroids()
         else:
             raise Exception(f"{self.init_strategy} not supported yet")
         return centroids
@@ -232,6 +245,10 @@ class K_means():
 Initialized with: k={self.k}, m={self.m}, threshold={self.threshold}, init_strategy={self.init_strategy}
 iterations run: {self.iterations_run}, total_error={self.total_error}"""
 
+    def copy(self):
+        return K_means(k=self.k, m=self.m, init_strategy=self.init_strategy,
+                       max_iterations=self.max_iterations, threshold=self.threshold, verbose=self.verbose)
+
 
 def from_file(file):
     return pickle.load(file)
@@ -285,3 +302,38 @@ class K_means_multiple_times():
                 print("")
 
         return best_k_means
+
+
+class DoubleKInitialization():
+    def __init__(self, orig_k_means):
+        self.orig_k_means = orig_k_means
+        k_means = orig_k_means.copy()
+        k_means.k = min(2*orig_k_means.k, len(orig_k_means.instances))
+        k_means.init_strategy = Init_Strategy.RANDOM
+        self.k_means = k_means
+
+    def run(self):
+        self.k_means.run(self.orig_k_means.instances)
+
+    def get_centroids(self):
+        sorted_centroid_indexes = list(range(0, self.k_means.k))
+        sorted_centroid_indexes.sort(
+            key=lambda cluster_i: self.intra_cluster_distance(cluster_i))
+        print([(i, self.intra_cluster_distance(i))
+               for i in sorted_centroid_indexes])
+        return list(map(lambda cluster_i: self.k_means.centroids[cluster_i], sorted_centroid_indexes[:self.orig_k_means.k]))
+
+    def intra_cluster_distance(self, cluster_i):
+        """
+        Calculates the summed distance of all instances of a cluster and divided by the number of instances
+        """
+        # TODO maybe substitute with another intra-cluster metric
+        total = float(0)
+        instances = self.k_means.instances_by_cluster[cluster_i]
+        if len(instances) == 0:
+            return float('nan')
+        for instance_i in instances:
+            distance = self.k_means.centroid_instance_distance(
+                instance_i, cluster_i)
+            total += distance
+        return total/len(instances)
