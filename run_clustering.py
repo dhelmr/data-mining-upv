@@ -11,21 +11,26 @@ import sys
 import time
 
 
-def main(src, dest_folder, k, m, n_iter, max_iter, threshold, verbose, init_strategy):
+def main(src, dest_folder, end_k, m, n_iter, max_iter, threshold, verbose, init_strategy, auto_inc):
     data = read_src_data(src)
     vecs = data["vectors"].values
 
     print("### Vectors loaded, start clustering...")
 
-    km = K_means(k=k, m=m, max_iterations=max_iter, threshold = threshold, verbose = verbose, init_strategy=init_strategy)  # TODO more parameter
-    result = km.run(n_iter, vecs)
-    print(f"Best result: {result}")
+    start_k = 2
+    if auto_inc == False:
+        start_k = end_k
 
-    # TODO more parameter in file
-    dest_file = path.join(
-        dest_folder, f"k_{result.k}_m_{result.m}_{time.time()}")
-    result.to_file(dest_file)
-    print(f"Saved to file {dest_file}")
+    for k in range(start_k, end_k+1):
+        km = K_means(k=k, m=m, max_iterations=max_iter, threshold = threshold, verbose = verbose, init_strategy=init_strategy)  # TODO more parameter
+        result = km.run(n_iter, vecs)
+        print(f"Best result: {result}")
+
+        # TODO more parameter in file
+        dest_file = path.join(
+            dest_folder, f"k_{result.k}_m_{result.m}_{time.time()}")
+        result.to_file(dest_file)
+        print(f"Saved to file {dest_file}")
 
 
 def read_src_data(path):
@@ -50,9 +55,11 @@ if __name__ == '__main__':
                         help="Threshold for centroid changes. A k-means run will terminate if each centroid change of the last iteration is less than this threshold value.")
     parser.add_argument("--verbose", dest="verbose", default=True, type=bool,
                         help="Verbose output on/off")
+    parser.add_argument("--auto_increment", dest="auto_inc", default=False, type=bool,
+                    help="Automatically increment k from k until the value specified with -k is reached")
     init_strategy_values = ", ".join( [f"{s.value}={s.name}" for s in k_means.Init_Strategy])
     parser.add_argument("--init_strategy", dest="init_strategy", default=k_means.Init_Strategy.RANDOM, type=int,
                         help="Init Strategy, one of "+init_strategy_values)
     args = parser.parse_args()
 
-    main(args.src, args.dest, args.k, args.m, args.iter, args.max_iter, args.threshold, args.verbose, args.init_strategy)
+    main(args.src, args.dest, args.k, args.m, args.iter, args.max_iter, args.threshold, args.verbose, args.init_strategy, args.auto_inc)

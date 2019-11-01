@@ -109,14 +109,12 @@ class K_means():
                 if self.threshold > 0 and self.threshold > max_centroids_change:
                     centroids_distance = self.distance(
                         old_centroid, new_centroid)
-                    print(old_centroid, new_centroid,
-                          "Distance of centroids", centroids_distance)
                     max_centroids_change = max(
                         max_centroids_change, centroids_distance)
 
             if self.verbose:
                 print(
-                    f"Centroid calculation completed: changed_centoids={changed_centroids}, max. changed distance (might not be accurate)={max_centroids_change}")
+                    f"Centroid calculation completed: changed_centoids={changed_centroids}, max. changed distance>={max_centroids_change}")
             after_centroid_calculation(self, cycle)
 
             # check if one of the abort criterions is reached
@@ -173,7 +171,6 @@ class K_means():
                         max_values[feature_i] = val
                     if min_values[feature_i] > val:
                         min_values[feature_i] = val
-                print(self.instances[instance_i])
             # create centroids
             matrix = np.zeros([self.k, self.n])
             for feature_i in range(0, self.n):
@@ -279,7 +276,7 @@ class K_means_multiple_times():
         for iteration in range(0, n_iterations):
             if self.verbose == True:
                 print(
-                    f"### Start k-means iteration {iteration} / {n_iterations} ###")
+                    f"### Start k-means iteration {iteration+1} / {n_iterations} ###")
             k_means = K_means(k=self.k,
                               init_strategy=self.init_strategy,
                               max_iterations=self.max_iterations,
@@ -319,8 +316,6 @@ class DoubleKInitialization():
         sorted_centroid_indexes = list(range(0, self.k_means.k))
         sorted_centroid_indexes.sort(
             key=lambda cluster_i: self.intra_cluster_distance(cluster_i))
-        print([(i, self.intra_cluster_distance(i))
-               for i in sorted_centroid_indexes])
         return list(map(lambda cluster_i: self.k_means.centroids[cluster_i], sorted_centroid_indexes[:self.orig_k_means.k]))
 
     def intra_cluster_distance(self, cluster_i):
