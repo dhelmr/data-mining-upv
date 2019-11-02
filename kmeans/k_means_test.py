@@ -10,7 +10,7 @@ import sys
 def compare_algorithms(data, k):
     sys.stdout.write(f"Compare scikit and own implentation for k={k} on {len(data)} instances... ")
     sys.stdout.flush()
-    kmeans = K_means(k, max_iterations=300) 
+    kmeans = K_means(k, max_iterations=300, verbose=False) 
     iterations = kmeans.run(data)
     
 
@@ -21,7 +21,7 @@ def compare_algorithms(data, k):
     for i in range(0, len(data)):
         instance = data[i]
         sk_centroid = sk.cluster_centers_[sk.predict([instance])][0]
-        own_centroid = kmeans.centroids[kmeans.closest_centroid(i)]
+        own_centroid = kmeans.centroids[kmeans.closest_centroid(i)[0]]
         assert np.allclose(sk_centroid, own_centroid), f"FAIL, instance {instance} has different centroids! {sk_centroid} (scikit) and {own_centroid} (own algorithm)"
     print("✔")
 

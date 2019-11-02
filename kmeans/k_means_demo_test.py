@@ -42,7 +42,7 @@ if __name__ == "__main__":
         plt.draw()
 
     # execute k-means clustering
-    k_means = K_means(k=5,m=2, init_strategy=2)
+    k_means = K_means(k=5,m=2, init_strategy=3)
     def plot(k_means, cycle):
         plot_k_means(k_means)
 
