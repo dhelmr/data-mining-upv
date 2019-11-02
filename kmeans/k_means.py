@@ -59,7 +59,7 @@ class K_means():
         self.cluster_mapping = np.zeros(len(data))
 
         if self.verbose == True:
-            print("Start clustering ", self)
+            print(f"Start clustering with k={self.k}, m={self.m}")
 
         abort = False
         cycle = 0
@@ -86,10 +86,7 @@ class K_means():
                     self.cluster_mapping[instance_i] = closest_centroid_i
                     clusters_changed += 1
                 self.instances_by_cluster[closest_centroid_i].add(instance_i)
-                self.total_error += pow(distance,2)
-            if self.verbose == True:
-                print(
-                    f"{clusters_changed} cluster memberships changed, total_error={self.total_error}")
+                self.total_error += pow(distance, 2)
             after_cluster_membership(self, cycle)
 
             # This will contain the maximum distance between an old and its update centroid (used for the treshold termination criterion)
@@ -112,9 +109,6 @@ class K_means():
                     max_centroids_change = max(
                         max_centroids_change, centroids_distance)
 
-            if self.verbose:
-                print(
-                    f"Centroid calculation completed: changed_centoids={changed_centroids}, max. changed distance>={max_centroids_change}")
             after_centroid_calculation(self, cycle)
 
             # check if one of the abort criterions is reached
@@ -127,7 +121,7 @@ class K_means():
             cycle = cycle + 1
             if self.verbose == True:
                 print(
-                    f"Finished cycle {cycle}, abort={abort}, abort_cycle={abort_cycle}, abort_no_changes={abort_no_changes}, abort_threshold={abort_threshold}")
+                    f"Finished cycle {cycle} | {clusters_changed} cluster memberships changed, SSE={self.total_error} changed_centoids={changed_centroids}, max. changed distance>={max_centroids_change}, abort={[abort_cycle, abort_no_changes, abort_threshold]}")
 
         self.iterations_run = cycle
         self.locked = False
@@ -310,6 +304,8 @@ class DoubleKInitialization():
         self.k_means = k_means
 
     def run(self):
+        if (self.orig_k_means.verbose == True):
+            print("Start k-means run with 2k for initialization")
         self.k_means.run(self.orig_k_means.instances)
 
     def get_centroids(self):
@@ -320,7 +316,7 @@ class DoubleKInitialization():
 
     def intra_cluster_distance(self, cluster_i):
         """
-        Calculates the summed distance of all instances of a cluster and divided by the number of instances
+        Calculates the summed squared distance of all instances of a cluster and divided by the number of instances
         """
         # TODO maybe substitute with another intra-cluster metric
         total = float(0)
@@ -330,5 +326,5 @@ class DoubleKInitialization():
         for instance_i in instances:
             distance = self.k_means.centroid_instance_distance(
                 instance_i, cluster_i)
-            total += distance
+            total += pow(distance, 2)
         return total/len(instances)
