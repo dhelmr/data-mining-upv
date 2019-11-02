@@ -64,9 +64,6 @@ class K_means():
         abort = False
         cycle = 0
         while not abort:
-            if self.verbose == True:
-                print(
-                    f">> Start cycleStart cycle {cycle+1}/{self.max_iterations}")
             # The instance map is used to keep track which instances belong to a cluster.
             # That is needed later for calculating the centroids of the cluster.
             self.clear_instance_map()
@@ -121,7 +118,7 @@ class K_means():
             cycle = cycle + 1
             if self.verbose == True:
                 print(
-                    f"Finished cycle {cycle} | {clusters_changed} cluster memberships changed, SSE={self.total_error} changed_centoids={changed_centroids}, max. changed distance>={max_centroids_change}, abort={[abort_cycle, abort_no_changes, abort_threshold]}")
+                    f"Finished cycle {cycle}/{self.max_iterations} | {clusters_changed} cluster memberships changed, SSE={self.total_error} changed_centoids={changed_centroids}, max. changed distance>={max_centroids_change}, abort={[abort_cycle, abort_no_changes, abort_threshold]}")
 
         self.iterations_run = cycle
         self.locked = False

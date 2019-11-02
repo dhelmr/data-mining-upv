@@ -11,7 +11,7 @@ import sys
 import time
 
 
-def main(src, dest_folder, end_k, m, n_iter, max_iter, threshold, verbose, init_strategy, auto_inc):
+def main(src, dest_folder, end_k, m_list, n_iter, max_iter, threshold, verbose, init_strategy, auto_inc):
     data = read_src_data(src)
     vecs = data["vectors"].values
 
@@ -21,16 +21,18 @@ def main(src, dest_folder, end_k, m, n_iter, max_iter, threshold, verbose, init_
     if auto_inc == False:
         start_k = end_k
 
-    for k in range(start_k, end_k+1):
-        km = K_means(k=k, m=m, max_iterations=max_iter, threshold = threshold, verbose = verbose, init_strategy=init_strategy)  # TODO more parameter
-        result = km.run(n_iter, vecs)
-        print(f"Best result: {result}")
+    for m in m_list:
+        for k in range(start_k, end_k+1):
+            print(f"### k={k}, m={m}")
+            km = K_means(k=k, m=m, max_iterations=max_iter, threshold = threshold, verbose = verbose, init_strategy=init_strategy)  # TODO more parameter
+            result = km.run(n_iter, vecs)
+            print(f"### Best result for k={k}, m={m}: {result}")
 
-        # TODO more parameter in file
-        dest_file = path.join(
-            dest_folder, f"k_{result.k}_m_{result.m}_{time.time()}")
-        result.to_file(dest_file)
-        print(f"Saved to file {dest_file}")
+            # TODO more parameter in file
+            dest_file = path.join(
+                dest_folder, f"k={result.k}_m={result.m}_init={result.init_strategy}_{time.time()}")
+            result.to_file(dest_file)
+            print(f"Saved to file {dest_file}")
 
 
 def read_src_data(path):
@@ -45,8 +47,8 @@ if __name__ == '__main__':
     parser.add_argument('--dest', dest='dest', default="resources/clustering/",
                         help='folder where to save the clustering result')
     parser.add_argument('-k', dest="k", default=10, type=int)
-    parser.add_argument('-m', dest="m", default=2, type=float,
-                        help="Parameter of the Minkowski-Distance (1=Manhatten distance; 2=Euclid distance)")
+    parser.add_argument('-m', dest="m_list", default=2,nargs='+', type=float,
+                        help="Parameter of the Minkowski-Distance (1=Manhatten distance; 2=Euclid distance). This can also be a list containing more values over which will be iterated.")
     parser.add_argument("--n_iter", dest="iter", default=10, type=int,
                         help="Run k-means n times. Afterwards the best result is chosen.")
     parser.add_argument("--max_iter", dest="max_iter", default=30, type=int,
@@ -61,5 +63,5 @@ if __name__ == '__main__':
     parser.add_argument("--init_strategy", dest="init_strategy", default=k_means.Init_Strategy.RANDOM, type=int,
                         help="Init Strategy, one of "+init_strategy_values)
     args = parser.parse_args()
-
-    main(args.src, args.dest, args.k, args.m, args.iter, args.max_iter, args.threshold, args.verbose, args.init_strategy, args.auto_inc)
+    
+    main(args.src, args.dest, args.k, args.m_list, args.iter, args.max_iter, args.threshold, args.verbose, args.init_strategy, args.auto_inc)
