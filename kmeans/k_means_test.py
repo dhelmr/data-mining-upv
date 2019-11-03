@@ -1,11 +1,20 @@
 from k_means import K_means
 from sklearn.cluster import KMeans as scikit_KMeans
-from k_means_demo_test import generate_random_data
 import numpy as np
 import sys
+import random
 #
 # Compares the own k_means algorithm with the scikit implementation
 #
+
+def generate_random_data(instances_n, dim=10):
+    data = list()
+    for i in range(0,instances_n):
+        instance = np.zeros(dim)
+        for d in range(0,dim):
+            instance[d] = random.randint(-1000,1000)
+        data.append(instance)
+    return data
 
 def compare_algorithms(data, k):
     sys.stdout.write(f"Compare scikit and own implentation for k={k} on {len(data)} instances... ")
@@ -27,8 +36,6 @@ def compare_algorithms(data, k):
 
 n = 1000
 random_data = generate_random_data(n)
-for k in range (1,10):
-    compare_algorithms(random_data, k)
-for k in range (1, 1000, 100):
+for k in range (2,50, 5):
     compare_algorithms(random_data, k)
 
