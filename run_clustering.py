@@ -11,10 +11,12 @@ import sys
 import time
 
 
-def main(src, dest_folder, end_k, m_list, n_iter, max_iter, threshold, verbose, init_strategy, auto_inc):
+def main(src, dest_folder, end_k, m_list, n_iter, max_iter, threshold, verbose, init_strategy, auto_inc, exclude_last):
     data = read_src_data(src)
     vecs = data["vectors"].values
-
+    if exclude_last != 0:
+        vecs = vecs[:-exclude_last]
+        print(f"Exclude last {exclude_last} instances from clustering")
     print("### Vectors loaded, start clustering...")
 
     start_k = 2
@@ -24,7 +26,7 @@ def main(src, dest_folder, end_k, m_list, n_iter, max_iter, threshold, verbose, 
     for m in m_list:
         for k in range(start_k, end_k+1):
             print(f"### k={k}, m={m}")
-            km = K_means(k=k, m=m, max_iterations=max_iter, threshold = threshold, verbose = verbose, init_strategy=init_strategy)  # TODO more parameter
+            km = K_means(k=k, m=m, max_iterations=max_iter, threshold = threshold, verbose = verbose, init_strategy=init_strategy)
             result = km.run(n_iter, vecs)
             print(f"### Best result for k={k}, m={m}: {result}")
 
@@ -62,6 +64,8 @@ if __name__ == '__main__':
     init_strategy_values = ", ".join( [f"{s.value}={s.name}" for s in k_means.Init_Strategy])
     parser.add_argument("--init_strategy", dest="init_strategy", default=k_means.Init_Strategy.RANDOM, type=int,
                         help="Init Strategy, one of "+init_strategy_values)
+    parser.add_argument("--exclude_last_n", dest="exclude_last_n", default=0, type=int,
+                    help="Excludes the last n instances from the clustering")
     args = parser.parse_args()
     
-    main(args.src, args.dest, args.k, args.m_list, args.iter, args.max_iter, args.threshold, args.verbose, args.init_strategy, args.auto_inc)
+    main(args.src, args.dest, args.k, args.m_list, args.iter, args.max_iter, args.threshold, args.verbose, args.init_strategy, args.auto_inc, args.exclude_last_n)
