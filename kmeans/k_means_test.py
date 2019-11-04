@@ -7,7 +7,7 @@ import random
 # Compares the own k_means algorithm with the scikit implementation
 #
 
-def generate_random_data(instances_n, dim=10):
+def generate_random_data(instances_n, dim=2):
     data = list()
     for i in range(0,instances_n):
         instance = np.zeros(dim)
@@ -19,7 +19,7 @@ def generate_random_data(instances_n, dim=10):
 def compare_algorithms(data, k):
     sys.stdout.write(f"Compare scikit and own implentation for k={k} on {len(data)} instances... ")
     sys.stdout.flush()
-    kmeans = K_means(k, max_iterations=300, verbose=False) 
+    kmeans = K_means(k,m=2, max_iterations=300, verbose=False) 
     iterations = kmeans.run(data)
     
 
@@ -36,6 +36,6 @@ def compare_algorithms(data, k):
 
 n = 1000
 random_data = generate_random_data(n)
-for k in range (2,50, 5):
+for k in range (3,50, 5):
     compare_algorithms(random_data, k)
 

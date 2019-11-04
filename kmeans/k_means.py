@@ -28,10 +28,14 @@ class K_means():
         self.verbose = verbose
 
         # declare other variables that will be filled after/while run() is called
-        self.total_error = -1
         self.instances_by_cluster = dict()
         self.iterations_run = -1
         self.cluster_mapping = None
+
+        """
+        Stores the distance to the closest other centroid
+        """
+        self.closest_centroid_distances = np.zeros(k)
 
     def run(self, data, after_centroid_calculation=lambda k_means, cycle: None,
             after_cluster_membership=lambda k_means, cycle: None,
@@ -46,67 +50,45 @@ class K_means():
         # read dimension of feature vectors
         self.n = len(data[0])
 
+        self.upper_bound_distance_to_centroid = np.zeros(
+            len(self.instances), dtype=float)
+        self.lower_bound_second_closest_centroid = np.zeros(
+            len(self.instances), dtype=float)
+        self.last_centroid_changes = np.zeros(self.k, dtype=float)
+
         # initialize centroids
         if centroid_initialization != None:
-            self.initial_centroids = copy.deepcopy(centroid_initialization)
+            self.centroids = copy.deepcopy(centroid_initialization)
         else:
             self.centroids = self.init_centroids()
 
         # store the initial centroid configuration for analysis purposes
-        self.initial_centroids = self.centroids.copy()
+        self.initial_centroids = copy.deepcopy(self.centroids)
 
         # maps each data instance index to the centroid index
-        self.cluster_mapping = np.zeros(len(data))
+        self.cluster_mapping = np.zeros(len(data), dtype=int)
 
         if self.verbose == True:
             print(f"Start clustering with k={self.k}, m={self.m}")
 
+        self.clear_instance_map()
+
+        for instance_i in range(len(self.instances)):
+            centroid_i = self.set_cluster_membership(instance_i)
+            self.instances_by_cluster[centroid_i].add(instance_i)
+
         abort = False
         cycle = 0
         while not abort:
-            # The instance map is used to keep track which instances belong to a cluster.
-            # That is needed later for calculating the centroids of the cluster.
-            self.clear_instance_map()
+            self.update_closest_centroid_distances()
 
-            # This variable will store the aggregated distances between the instances and its centroids
-            # thus, it is a measurement how "good" or "bad" the clustering is
-            self.total_error = 0
-
-            # determine cluster memberships
-            clusters_changed = 0
-            for instance_i in range(len(data)):
-                closest_centroid_i, distance = self.closest_centroid(
-                    instance_i)
-                old_centroid_i = self.cluster_mapping[instance_i]
-                # check if the centroid must be updated
-                if old_centroid_i != closest_centroid_i:
-                    self.cluster_mapping[instance_i] = closest_centroid_i
-                    clusters_changed += 1
-                self.instances_by_cluster[closest_centroid_i].add(instance_i)
-                self.total_error += pow(distance, 2)
+            clusters_changed = self.determine_cluster_memberships()
             after_cluster_membership(self, cycle)
 
-            # This will contain the maximum distance between an old and its update centroid (used for the treshold termination criterion)
-            max_centroids_change = 0
-
-            # calculate new centroids for each cluster
-            changed_centroids = 0
-            for cluster_i in self.instances_by_cluster:
-                new_centroid = self.calc_centroid(cluster_i)
-                old_centroid = self.centroids[cluster_i]
-                if np.array_equal(new_centroid, old_centroid):
-                    continue
-
-                self.centroids[cluster_i] = new_centroid
-                changed_centroids += 1
-                # calculate the distance of the new and old centroid (only if necessary)
-                if self.threshold > 0 and self.threshold > max_centroids_change:
-                    centroids_distance = self.distance(
-                        old_centroid, new_centroid)
-                    max_centroids_change = max(
-                        max_centroids_change, centroids_distance)
-
+            changed_centroids, max_centroids_change = self.update_centroids()
             after_centroid_calculation(self, cycle)
+
+            self.update_bounds()
 
             # check if one of the abort criterions is reached
             abort_cycle = (cycle >= (self.max_iterations-1))
@@ -118,7 +100,7 @@ class K_means():
             cycle = cycle + 1
             if self.verbose == True:
                 print(
-                    f"Finished cycle {cycle}/{self.max_iterations} | {clusters_changed} cluster memberships changed, SSE={self.total_error} changed_centoids={changed_centroids}, max. changed distance>={max_centroids_change}, abort={[abort_cycle, abort_no_changes, abort_threshold]}")
+                    f"Finished cycle {cycle}/{self.max_iterations} | {clusters_changed} cluster memberships changed, changed_centoids={changed_centroids}, max. changed distance>={max_centroids_change}, abort={[abort_cycle, abort_no_changes, abort_threshold]}")
 
         self.iterations_run = cycle
         self.locked = False
@@ -218,8 +200,111 @@ class K_means():
             total = total + math.pow(base, self.m)
         return math.pow(total, 1/self.m)  # TODO float arithemtic
 
-    # returns the cluster membership of an instance after run() was executed
+    def update_closest_centroid_distances(self):
+        for centroid_i in range(len(self.centroids)):
+            min_distance = None
+            for centroid_j in range(len(self.centroids)):
+                if centroid_i != centroid_j:
+                    distance = self.distance(
+                        self.centroids[centroid_i], self.centroids[centroid_j])
+                    if min_distance == None or distance < min_distance:
+                        min_distance = distance
+            if self.closest_centroid_distances[centroid_i] != min_distance:     
+                self.closest_centroid_distances[centroid_i] = min_distance
+
+    def determine_cluster_memberships(self):
+        # determine cluster memberships
+        clusters_changed = 0
+        for instance_i in range(len(self.instances)):
+            old_centroid_i = self.cluster_mapping[instance_i]
+            s2 = self.closest_centroid_distances[old_centroid_i]/float(2)
+            m = max(s2,
+                    self.lower_bound_second_closest_centroid[instance_i])
+            upper_bound_distance = self.upper_bound_distance_to_centroid[instance_i]
+         
+           # print(self.upper_bound_distance_to_centroid, self.lower_bound_second_closest_centroid, self.closest_centroid_distances)
+            if upper_bound_distance > m:
+                self.upper_bound_distance_to_centroid[instance_i] = self.centroid_instance_distance(
+                    instance_i, old_centroid_i)
+                if True or self.upper_bound_distance_to_centroid[instance_i] > m:
+                    closest_centroid_i = self.set_cluster_membership(
+                        instance_i)
+                    # check if the centroid must be updated
+                    if old_centroid_i != closest_centroid_i:
+                        self.instances_by_cluster[closest_centroid_i].add(
+                            instance_i)
+                        self.instances_by_cluster[old_centroid_i].remove(
+                            instance_i)
+                        clusters_changed += 1
+        return clusters_changed
+
+    def set_cluster_membership(self, instance_i):
+        closest_centroid_i, distance = self.closest_centroid(instance_i)
+        self.cluster_mapping[instance_i] = closest_centroid_i
+        self.update_lower_bounds_to_second_closest_centroid(
+            instance_i, closest_centroid_i)
+        self.upper_bound_distance_to_centroid[instance_i] = distance
+        return closest_centroid_i
+
+    def update_lower_bounds_to_second_closest_centroid(self, instance_i, closest_cluster_i):
+        min_distance = None
+        for cluster_j in range(len(self.centroids)):
+            if cluster_j == closest_cluster_i:
+                continue
+            distance = self.centroid_instance_distance(instance_i, cluster_j)
+            if min_distance == None or distance < min_distance:
+                min_distance = distance
+        self.lower_bound_second_closest_centroid[instance_i] = min_distance
+
+    def update_centroids(self):
+        # This will contain the maximum distance between an old and its update centroid (used for the treshold termination criterion)
+        max_centroids_change = 0
+
+        # calculate new centroids for each cluster
+        changed_centroids = 0
+        for cluster_i in self.instances_by_cluster:
+            new_centroid = self.calc_centroid(cluster_i)
+            old_centroid = self.centroids[cluster_i]
+            if np.array_equal(new_centroid, old_centroid):
+                continue
+            self.centroids[cluster_i] = new_centroid
+            changed_centroids += 1
+            centroids_distance = self.distance(
+                old_centroid, new_centroid)
+            max_centroids_change = max(
+                max_centroids_change, centroids_distance)
+            self.last_centroid_changes[cluster_i] = centroids_distance
+            
+        return (changed_centroids, max_centroids_change)
+
+    def update_bounds(self):
+        r = None
+        r2 = None
+        for cluster_i in range(len(self.last_centroid_changes)):
+            last_change = self.last_centroid_changes[cluster_i]
+            if r == None or last_change > self.last_centroid_changes[r]:
+                r2 = r
+                r = cluster_i
+            elif r2 == None or last_change > self.last_centroid_changes[r2]:
+                r2 = cluster_i
+
+        for instance_i in range(len(self.instances)):
+            cluster_i = self.cluster_mapping[instance_i]
+            upper_bound = self.upper_bound_distance_to_centroid[instance_i]
+            lower_bound = self.lower_bound_second_closest_centroid[instance_i]
+            self.upper_bound_distance_to_centroid[instance_i] = upper_bound + \
+                self.last_centroid_changes[cluster_i]
+            if r == cluster_i:
+                self.lower_bound_second_closest_centroid[instance_i] = lower_bound - \
+                    self.last_centroid_changes[r2]
+            else:
+                self.lower_bound_second_closest_centroid[instance_i] = lower_bound - \
+                    self.last_centroid_changes[r]
+
     def get_centroid(self, instance_i):
+        """
+        returns the cluster membership of an instance after run() was executed
+        """
         centroid_i = self.cluster_mapping[instance_i]
         return self.centroids[centroid_i]
 
@@ -231,12 +316,22 @@ class K_means():
     def __str__(self):
         return f"""<K-Means object>
 Initialized with: k={self.k}, m={self.m}, threshold={self.threshold}, init_strategy={self.init_strategy}
-iterations run: {self.iterations_run}, total_error={self.total_error}"""
+iterations run: {self.iterations_run}"""
 
     def copy(self):
         return K_means(k=self.k, m=self.m, init_strategy=self.init_strategy,
                        max_iterations=self.max_iterations, threshold=self.threshold, verbose=self.verbose)
 
+    def calc_SSE(self):
+        """
+        Calculates the squared summed squared error of all instance-centroid distances
+        """
+        total = 0
+        for instance_i in range(len(self.instances)):
+            centroid_i = self.cluster_mapping[instance_i]
+            distance = self.centroid_instance_distance(instance_i=instance_i, centroid_i=centroid_i)
+            total+=pow(distance, 2)
+        return total
 
 def from_file(file):
     return pickle.load(file)
@@ -263,7 +358,7 @@ class K_means_multiple_times():
         Runs the K_means algorithm n times and returns the best-performing k_means instance
         (the one with the lowest total distance error)
         """
-        best_k_means = None
+        best_k_means, best_sse = None, None
         for iteration in range(0, n_iterations):
             if self.verbose == True:
                 print(
@@ -274,12 +369,11 @@ class K_means_multiple_times():
                               m=self.m, threshold=self.threshold, verbose=self.verbose)
             k_means.run(data, after_centroid_calculation=after_centroid_calculation,
                         after_cluster_membership=after_cluster_membership)
-            if best_k_means == None:
-                best_k_means = k_means
 
-            isBest = k_means.total_error < best_k_means.total_error
-            if isBest:
+            sse = k_means.calc_SSE()
+            if best_sse == None or sse < best_sse:
                 best_k_means = k_means
+                best_sse = sse
 
             between_iter_fn(iteration, k_means)
 
