@@ -2,7 +2,10 @@ from k_means import K_means
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import silhouette_samples, silhouette_score
-
+from sklearn.neighbors import NearestNeighbors
+from random import sample
+from numpy.random import uniform
+from math import isnan
 
 def calc_see(k_means):
 
@@ -19,19 +22,22 @@ def calc_see(k_means):
 
         cohesions_cluster = []
 
-        for instance_i in k_means.instances_by_cluster[cluster_i]:
+        centroid_i = k_means.centroids[cluster_i]
 
+        for index_i in k_means.instances_by_cluster[cluster_i]:
 
-            centroid_i = k_means.get_centroid(instance_i)
-
+            instance = k_means.instances[index_i]
             distance_list = []
-            distance_list.append((k_means.distance(instance_i, centroid_i)) ** 2)
+            distance_list.append((k_means.distance(instance, centroid_i)) ** 2)
 
         cohesions_cluster.append(np.sum(distance_list))
 
     cohesion_partition = np.sum(cohesions_cluster)
 
     return cohesion_partition
+
+
+
 
 
 
