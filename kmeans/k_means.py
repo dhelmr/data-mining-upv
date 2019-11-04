@@ -5,6 +5,11 @@ import math
 import pickle
 import pprint
 import copy
+import numba
+import random
+
+import warnings
+warnings.filterwarnings('ignore')
 
 
 class Init_Strategy(IntEnum):
@@ -113,15 +118,13 @@ class K_means():
             self.instances_by_cluster[i] = set()
 
     # Calculates the centroid of an cluster by averaging all instances of that cluster
+    #@jit(nopython=True)
     def calc_centroid(self, cluster_i):
-        total = np.zeros(self.n)
-        for instance_i in self.instances_by_cluster[cluster_i]:
-            total = total + self.instances[instance_i]
-        n_instances = len(self.instances_by_cluster[cluster_i])
-        if n_instances == 0:
+        centroid = jit_calc_centroid(self.n, self.instances_by_cluster[cluster_i], self.instances)
+        if centroid is None:
             return self.centroids[cluster_i]
-        return total/n_instances
-
+        return centroid
+            
     # Initializes the centroids according to the initialization strategy (self.init_strategy)
     # See the Init_Strategy enum for possible values
     def init_centroids(self):
@@ -174,6 +177,7 @@ class K_means():
     # the result is a tuple (centroid_index, distance) which contains:
     # 1.the index of the corresponding centroid of the self.centroids array
     # 2.the distance to this centroid
+    #@jit(nopython=True)
     def closest_centroid(self, instance_i):
         min_centroid_i = 0
         min_distance = self.centroid_instance_distance(
@@ -194,11 +198,7 @@ class K_means():
     # calculates the Minowski distance between two points
     # the points must be represented by arrays/lists of self.n dimension
     def distance(self, pointA, pointB):
-        total = 0
-        for feature_i in range(self.n):
-            base = abs(pointA[feature_i] - pointB[feature_i])
-            total = total + math.pow(base, self.m)
-        return math.pow(total, 1/self.m)  # TODO float arithemtic
+        return minkowski(self.m, pointA, pointB, self.n)
 
     def update_closest_centroid_distances(self):
         for centroid_i in range(len(self.centroids)):
@@ -274,9 +274,10 @@ class K_means():
             max_centroids_change = max(
                 max_centroids_change, centroids_distance)
             self.last_centroid_changes[cluster_i] = centroids_distance
-            
+
         return (changed_centroids, max_centroids_change)
 
+    #@jit(nopython=True)
     def update_bounds(self):
         r = None
         r2 = None
@@ -336,6 +337,23 @@ iterations run: {self.iterations_run}"""
 def from_file(file):
     return pickle.load(file)
 
+@numba.jit(nopython=True)
+def minkowski(m, pointA, pointB, n_features):
+    total = 0
+    for feature_i in range(n_features):
+        base = abs(pointA[feature_i] - pointB[feature_i])
+        total = total + math.pow(base, m)
+    return math.pow(total, 1/m)
+
+@numba.jit(nopython=True)
+def jit_calc_centroid(n, cluster_instances_i, instances):
+    total = np.zeros(n)
+    for instance_i in cluster_instances_i:
+        total = total + instances[instance_i]
+    n_instances = len(cluster_instances_i)
+    if n_instances == 0:
+        return None
+    return total/n_instances
 
 class K_means_multiple_times():
     def __init__(self, k=5, m=2,
