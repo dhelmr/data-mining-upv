@@ -15,6 +15,8 @@ def labelling_tweets(tweets):
     labels tweets with the document index (integer)
     to use this function you have to make sure, that there are no more NaN entries within the tweets
 
+    source: https://towardsdatascience.com/another-twitter-sentiment-analysis-with-python-part-6-doc2vec-603f11832504
+
     :param tweets: tweets to be labeled
     :return: labeled tweets
     """
@@ -33,6 +35,8 @@ def labelling_tweets(tweets):
 def initialize_d2v_model(tweets_labeled, dm=0, negative=5, vector_size=200, min_count=2, alpha=0.065, min_alpha=0.065):
     """
     initializes an d2v model with the given parameter. Also creates a vocab based on the given tweets
+
+    source: https://radimrehurek.com/gensim/models/doc2vec.html
 
     :param tweets_labeled: labeled tweets used to create vocab
     :param dm: 0 -> DM 'distributed memory', 1 -> DBOW 'distributed bag of words'
@@ -63,6 +67,8 @@ def initialize_d2v_model(tweets_labeled, dm=0, negative=5, vector_size=200, min_
 def train_model_d2v(model_d2v, tweets_labeled, max_epochs=20):
     """
     trains a given d2v model with the given labeled text data / tweets
+
+    source: https://radimrehurek.com/gensim/models/doc2vec.html
 
     :param model_d2v: initialized (untrained) d2v model
     :param tweets_labeled: labeled tweets to use for training
@@ -107,7 +113,7 @@ if __name__ == '__main__':
     parser.add_argument('src_path', help='enter source path of training data')
     parser.add_argument('-dm', '--type', default=0, type=int, help='enter d2v model type (0 -> DM, 1 -> DBOW')
     parser.add_argument('-vs', '--vec_size', default=200, type=int, help='enter wanted vector size')
-    parser.add_argument('-e', '--epochs', default=10, type=int, help='enter wanted vector size')
+    parser.add_argument('-e', '--epochs', default=10, type=int, help='enter wanted amount of training epochs')
 
     args = parser.parse_args()
 
