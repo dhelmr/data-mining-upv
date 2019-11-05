@@ -334,8 +334,17 @@ iterations run: {self.iterations_run}"""
             total+=pow(distance, 2)
         return total
 
+    def result_to_file(self, file):
+        copy = self.copy(new_k= self.k)
+        copy.cluster_mapping = self.cluster_mapping
+        copy.centroids = self.centroids
+        copy.instances_by_cluster = self.instances_by_cluster
+        copy.first_instances = self.instances[0:20]
+        pickle.dump(copy, open(file, "wb"))
+
+
 def from_file(file):
-    return pickle.load(file)
+    return pickle.load(open(file, "rb"))
 
 @numba.jit(nopython=True)
 def minkowski(m, pointA, pointB, n_features):

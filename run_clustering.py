@@ -30,8 +30,8 @@ def main(src, dest_folder, end_k, start_k, m_list, n_iter, max_iter, threshold, 
 
             # TODO more parameter in file
             dest_file = path.join(
-                dest_folder, f"k={result.k}_m={result.m}_init={result.init_strategy}_{time.time()}")
-            result.to_file(dest_file)
+                dest_folder, f"k={result.k}_m={result.m}_init={result.init_strategy}_{time.time()}.result")
+            result.result_to_file(dest_file)
             print(f"Saved to file {dest_file}")
 
 
