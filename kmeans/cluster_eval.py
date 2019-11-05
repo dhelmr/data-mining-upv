@@ -1,11 +1,56 @@
-from k_means import K_means
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.metrics import silhouette_samples, silhouette_score
-from sklearn.neighbors import NearestNeighbors
+import pandas as pd
 from random import sample
 from numpy.random import uniform
 from math import isnan
+import os
+
+from sklearn.metrics import silhouette_samples, silhouette_score
+from sklearn.metrics.cluster import adjusted_mutual_info_score
+from sklearn.metrics.cluster import adjusted_rand_score
+from sklearn.metrics import jaccard_score
+from sklearn.neighbors import NearestNeighbors
+
+import pickle
+
+from k_means import K_means
+from cluster_eval import *
+
+from pyclustertend import hopkins, vat, ivat
+
+def give_tendency_eval(X=None):
+    print("####### Results from Evaluation 1: Cluster Tendency ########")
+
+    if X is None:
+
+        X = pickle.load(open("resources/small/vecs.vec","rb"))
+        #X = np.vstack(k_means_obj.instances)   old
+
+    hop = hopkins(X, len(X))
+
+    print(f"The Hopkins Score: {hop}" )
+
+    #vat(X)
+    #ivat(X)
+
+def give_tendency_eval(k_means_obj=None):
+    print("####### Results from Evaluation 1: Cluster Tendency ########")
+
+    if k_means_obj is None:
+
+        X = pickle.load(open("resources/small/vecs.vec","rb"))
+
+    else:
+        X = np.vstack(k_means_obj.instances)
+
+    hop = hopkins(X, len(X))
+
+    print(f"The Hopkins Score: {hop}" )
+
+    #vat(X)
+    #ivat(X)
+
 
 def calc_see(k_means):
 
@@ -37,11 +82,7 @@ def calc_see(k_means):
     return cohesion_partition
 
 
-
-
-
-
-def plot_clusters_vs_see(X_std, max_range):
+def plot_clusters_vs_see(max_range):
     """
     execute k-means clustering with multiple iterations of increasing k and plots the error against the
     number of k clusters
@@ -53,12 +94,17 @@ def plot_clusters_vs_see(X_std, max_range):
     """
 
     list_sse = []
-    list_k = list(range(1, max_range))
+    list_k = list(range(max_range))
+    sorted_files = sorted(os.listdir("resources/small/clustering/m_1.5"), key=str.lower)
 
-    for k_i in list_k:
-        k_means = K_means(k=k_i, m=1)
-        k_means.run(X_std)
+    for k, filename in zip(list_k, sorted_files):
+
+        file = "resources/small/clustering/m_1.5/" + filename
+
+        k_means = pickle.load(open(file,"rb"))
         list_sse.append(calc_see(k_means))
+
+        print(file)
 
     # Plot sse against k
     plt.figure(figsize=(6, 6))
@@ -68,7 +114,7 @@ def plot_clusters_vs_see(X_std, max_range):
     plt.show()
 
 
-def plot_silhouettes(X_std, k, max_range):
+def plot_silhouettes(max_range):
 
     """
     "translated" from https://towardsdatascience.com/k-means-clustering-algorithm-applications-evaluation-methods-and-drawbacks-aa03e644b48a
@@ -78,20 +124,28 @@ def plot_silhouettes(X_std, k, max_range):
     :return: 
     """
 
+    sorted_files = sorted(os.listdir("resources/small/clustering/m_1.5"), key=str.lower)
+    not_odd_files = sorted_files[2::2]  #return just every 2nd item
+    print(not_odd_files)
+
     list_k = list(range(2, max_range+1))
 
-    for i, k in enumerate(list_k):
+    for k, filename in zip(list_k, not_odd_files):
+
+        file = "resources/small/clustering/m_1.5/" + filename
+
         fig, (ax1, ax2) = plt.subplots(1, 2)
         fig.set_size_inches(18, 7)
 
-        # Run the Kmeans algorithm
-        k_means = K_means(k=k, m=1)
-        k_means.run(X_std)
+        # Kmeans object
+        print(file)
+        k_means = pickle.load(open(file,"rb"))
         labels = k_means.cluster_mapping
         centroids = np.vstack(k_means.centroids)
+        X = np.vstack(k_means.instances)
 
         # Get silhouette samples
-        silhouette_vals = silhouette_samples(X_std, labels)
+        silhouette_vals = silhouette_samples(X, labels)
 
         # Silhouette plot
         y_ticks = []
@@ -114,7 +168,7 @@ def plot_silhouettes(X_std, k, max_range):
         ax1.set_title('Silhouette plot for the various clusters', y=1.02);
 
         # Scatter plot of data colored with labels
-        ax2.scatter(X_std[:, 0], X_std[:, 1], c=labels)
+        ax2.scatter(X[:, 0], X[:, 1], c=labels)
         ax2.scatter(centroids[:, 0], centroids[:, 1], marker='*', c='r', s=250)
         ax2.set_xlim([-2, 2])
         ax2.set_xlim([-2, 2])
@@ -127,3 +181,156 @@ def plot_silhouettes(X_std, k, max_range):
                      fontsize=16, fontweight='semibold', y=1.05)\
 
         plt.show();
+
+
+def give_internal_eval(max_range):
+
+    print("#######  Results from Evaluation 3: Internal Criteria #########")
+
+    #ToDo: loading multiple runs of the clustering models for comparison
+
+    plot_silhouettes(max_range)
+    plot_clusters_vs_see(max_range)
+
+def jaccard_coeff(a, b):
+    """
+
+    :param a: np.array group 1
+    :param b: np.array group 2
+    :param c: intersection between group 1 and 2
+    :return: jaccard score between group 1 and 2
+    """
+    c = np.intersect1d(a, b)
+
+    if len(c) == 0:
+        return 0
+
+    return float(len(c)) / (len(a) + len(b) + len(c))
+
+def table_class_vs_cluster(original_X, k_means_obj, iris=False):
+
+    if iris is True:
+
+    ## Test for Iris data
+
+        collect_lst = []
+
+        indices_class_2 = original_X[original_X[0] == 2].index.values
+        indices_class_1 = original_X[original_X[0] == 1].index.values
+        indices_class_0 = original_X[original_X[0] == 0].index.values
+
+        for cluster_i in k_means_obj.instances_by_cluster:
+
+            indices_cluster_i = list(k_means_obj.instances_by_cluster[cluster_i])
+
+            tot_nbr_2 = len(np.intersect1d(indices_class_2, indices_cluster_i))
+            tot_nbr_1 = len(np.intersect1d(indices_class_1, indices_cluster_i))
+            tot_nbr_0 = len(np.intersect1d(indices_class_0, indices_cluster_i))
+
+            perc_of_biggest_cluster = max(tot_nbr_0, tot_nbr_1, tot_nbr_2)/ sum([tot_nbr_0, tot_nbr_1, tot_nbr_2])
+
+            collect_lst.append([tot_nbr_0, tot_nbr_1, tot_nbr_2, perc_of_biggest_cluster])
+
+        comparison_df = pd.DataFrame(collect_lst, columns=["class_0","class_1", "class_2","perc_biggest"])
+
+    else:
+
+        collect_lst = []
+
+        indices_class_1 = list(original_X[original_X.label == 1.0].index.values)
+        indices_class_0 = list(original_X[original_X.label == 0.0].index.values)
+
+        for cluster_i in k_means_obj.instances_by_cluster:
+
+            indices_cluster_i = list(k_means_obj.instances_by_cluster[cluster_i])
+
+            tot_nbr_1 = len(np.intersect1d(indices_class_1, indices_cluster_i))
+            tot_nbr_0 = len(np.intersect1d(indices_class_0, indices_cluster_i))
+
+            perc_of_biggest_cluster = max(tot_nbr_0, tot_nbr_1) / sum([tot_nbr_0, tot_nbr_1])
+
+            collect_lst.append([tot_nbr_0, tot_nbr_1, perc_of_biggest_cluster])
+
+        comparison_df = pd.DataFrame(collect_lst, columns=["class_0", "class_1", "perc_biggest"])
+
+    return comparison_df
+
+
+def give_external_eval(original_X, X, max_range, m, iris=False):
+
+
+    print("#######  Results from Evaluation 2: External Criteria #########")
+
+
+    """
+    these score cant really be used with a clustering where no known attributes exist
+    
+    if X is None:
+        partition_labels = list(original_X.label.values)
+        clustering_labels = list(map(int, k_means_obj.cluster_mapping))
+
+    else:
+        partition_labels = list(original_X[0])
+        clustering_labels = list(map(int, k_means_obj.cluster_mapping))
+
+
+    if score_type == "jaccard":
+        jac_score = jaccard_score(partition_labels, clustering_labels)
+        print(f"The jaccard score: {jac_score}")
+
+    elif score_type == "adj_info":
+        adj_inf_score = adjusted_mutual_info_score(partition_labels, clustering_labels)
+        print(f"The adjusted mutual information score: {adj_inf_score}")
+
+    elif score_type == "adj_rand":
+        adj_rand_score = adjusted_rand_score(partition_labels, clustering_labels)
+        print(f"The adjusted rand score: {adj_rand_score}")
+
+    """
+    if iris is True:
+
+        avrg_perc_lst = []
+        list_k = list(range(2, max_range))
+
+        for k in list_k:
+
+            k_means = K_means(k=k, m=m)
+            k_means.run(X)
+
+            result_df = table_class_vs_cluster(original_X, k_means, True)
+
+            avr_perc = np.average(result_df.perc_biggest)
+            avrg_perc_lst.append(avr_perc)
+
+        plt.figure(figsize=(6, 6))
+        plt.plot(list_k, avrg_perc_lst, '-o')
+        plt.xlabel(r'Number of clusters *k*')
+        plt.ylabel('Average percentage of conformity from biggest clusters')
+        plt.show()
+
+    else:
+
+        avrg_perc_lst = []
+        list_k = list(range(2, max_range+2))
+        files = os.listdir("resources/small/clustering/m_1.5")
+        files.remove(".DS_Store")
+        sorted_files =  sorted(files[1:], key=lambda s: s.split("_")[1])
+
+        for k, filename in zip(list_k, sorted_files):
+
+            file = "resources/small/clustering/m_1.5/" + filename
+            print(file)
+            k_means = pickle.load(open(file, "rb"))
+
+            result_df = table_class_vs_cluster(original_X, k_means)
+
+            avr_perc = np.average(result_df.perc_biggest)
+            avrg_perc_lst.append(avr_perc)
+
+        plt.figure(figsize=(6, 6))
+        plt.plot(list_k, avrg_perc_lst, '-o')
+        plt.xlabel(r'Number of clusters *k*')
+        plt.ylabel('Average percentage of conformity from biggest clusters')
+        plt.show()
+
+
