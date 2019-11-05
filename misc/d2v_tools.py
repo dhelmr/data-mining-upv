@@ -1,13 +1,15 @@
 """
-Document2Vector model training
+file contains all tools or functions in context to doc2vec
+
 """
 
-import argparse
-import pandas as pd
+import numpy as np
 import multiprocessing
 from sklearn import utils
 from gensim.models import Doc2Vec
 from gensim.models.doc2vec import TaggedDocument
+
+VECTOR_SIZE = 200
 
 
 def labelling_tweets(tweets):
@@ -20,24 +22,23 @@ def labelling_tweets(tweets):
     """
 
     labeled_tweets = []
-    print(f"INFO: Start labeling tweets")
+    print("INFO: tweet labeling started")
 
     # t:tweet; i:unique document id
     for i, t in zip(tweets.index, tweets):
         labeled_tweets.append(TaggedDocument(t.split(), ["{}".format(i)]))
-    print("INFO: Tweet labeling finished")
+    print("INFO: tweet labeling finished")
 
     return labeled_tweets
 
 
-def initialize_d2v_model(tweets_labeled, dm=0, negative=5, vector_size=200, min_count=2, alpha=0.065, min_alpha=0.065):
+def initialize_d2v_model(tweets_labeled, dm=0, negative=5, min_count=2, alpha=0.065, min_alpha=0.065):
     """
     initializes an d2v model with the given parameter. Also creates a vocab based on the given tweets
 
     :param tweets_labeled: labeled tweets used to create vocab
     :param dm: 0 -> DM 'distributed memory', 1 -> DBOW 'distributed bag of words'
     :param negative:
-    :param vector_size: size of vectors
     :param min_count: minimum appearance to be considered for vocab
     :param alpha: learning rate
     :param min_alpha: minimal learning rate alpha
@@ -48,9 +49,9 @@ def initialize_d2v_model(tweets_labeled, dm=0, negative=5, vector_size=200, min_
 
     # get amount of cpu cores & initialize d2v model
     cores = multiprocessing.cpu_count()
-    print(f"SYSTEM: {cores} cores are used")
+    print(f"INFO: {cores} cores are used")
 
-    model_d2v = Doc2Vec(dm=dm, vector_size=vector_size, negative=negative, min_count=min_count,
+    model_d2v = Doc2Vec(dm=dm, vector_size=VECTOR_SIZE, negative=negative, min_count=min_count,
                     alpha=alpha, min_alpha=min_alpha)
 
     # load tweets into model to create vocabulary
@@ -60,12 +61,14 @@ def initialize_d2v_model(tweets_labeled, dm=0, negative=5, vector_size=200, min_
     return model_d2v
 
 
-def train_model_d2v(model_d2v, tweets_labeled, max_epochs=20):
+def train_model_d2v(model_d2v, tweets_labeled, save_model=False, path="resources/models/model_d2v.model",  max_epochs=30):
     """
     trains a given d2v model with the given labeled text data / tweets
 
     :param model_d2v: initialized (untrained) d2v model
     :param tweets_labeled: labeled tweets to use for training
+    :param save_model: option to save trained model
+    :param path: to save trained model
     :param max_epochs: maximum amount of training epochs
     :return: trained and ready to use d2v model
     """
@@ -73,7 +76,7 @@ def train_model_d2v(model_d2v, tweets_labeled, max_epochs=20):
     print("INFO: d2c model training started")
 
     for epoch in range(max_epochs):
-        print(f"INFO: Training epoch {epoch + 1} of {max_epochs}")
+        print(f"INFO: training epoch {epoch + 1} of {max_epochs}")
 
         # train model - lower training rate alpha after each epoch
         model_d2v.train(utils.shuffle(tweets_labeled), total_examples=len(tweets_labeled), epochs=1)
@@ -81,37 +84,34 @@ def train_model_d2v(model_d2v, tweets_labeled, max_epochs=20):
         model_d2v.min_alpha = model_d2v.alpha
     print(f"INFO: d2v model training completed ({max_epochs} epochs)")
 
+    # if option selected: save model to given path
+    if save_model is True:
+        model_d2v.save(path)
+        print(f"INFO: d2v-model saved to path: {path}")
+
     return model_d2v
 
 
-def main(src_path, dm, dest_path, epochs):
-    print("### DOC2VEC TRAINING ###")
+def get_vectors(model, data):
+    """
+    CLASS IS ONLY NEEDED FOR CLASSIFICATION (if applied)
+    function to create vector representations of given data. The vectors trained by the doc2vec model are used
 
-    print(f"INFO: Read training data from {src_path}")
-    data = pd.read_csv(src_path)
-    tweets_training = data.text
-    tweets_labeled = labelling_tweets(tweets_training)
+    :param model: d2v model
+    :param data: text data which is going to transformed to vector representation
+    :return: matrix containing the data as vector representation (each row represents one text file or tweet)
+    """
 
-    print(f"INFO: Start building d2v model (dm={dm})")
-    model_d2v = initialize_d2v_model(tweets_labeled, dm=dm)
-    model_d2v = train_model_d2v(model_d2v, tweets_labeled, max_epochs=epochs)
+    # delete temporary training data of model (no more updates, only querying, reduce memory usage)
+    model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
 
-    model_d2v.save(dest_path)
-    print(f"INFO: Doc2Vec model saved to {dest_path}")
+    # empty matrix with dimension 'amount tweets' x 200
+    vectors = np.zeros((len(data), VECTOR_SIZE))
 
-    print("### ENDED DOC2VEC TRAINING ###")
+    n = 0
+    for i in data.index:
+        # i-ter vector from Doc2Vec in n-te row of matrix
+        vectors[n] = model.docvecs[str(i)]
+        n += 1
 
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='D2V TRAINER')
-    parser.add_argument('src_path', help='enter source path of training data')
-    parser.add_argument('-dm', '--type', default=0, type=int, help='enter d2v model type (0 -> DM, 1 -> DBOW')
-    parser.add_argument('-vs', '--vec_size', default=200, type=int, help='enter wanted vector size')
-    parser.add_argument('-e', '--epochs', default=10, type=int, help='enter wanted vector size')
-
-    args = parser.parse_args()
-
-    main(args.src_path, args.dm, args.dest_path, args.epochs)
-
-
-
+    return vectors
