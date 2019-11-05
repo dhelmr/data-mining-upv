@@ -16,6 +16,9 @@ def clean_tweets(data, stopwords_stemming=False):
     This function prepares and cleans all tweets within the given data frame. Contractions handling, lowercase
     delete special signs, @s with username, https, word stemming, stopwords removal, ...
 
+    source: https://cs.stanford.edu/people/alecmgo/papers/TwitterDistantSupervision09.pdf
+    source: https://towardsdatascience.com/another-twitter-sentiment-analysis-bb5b01ebad90
+
     :param data: pandas data frame containing raw Sentiment140 tweets
     :param stopwords_stemming: set True if stopwords removal and word stemming should be applied
     :return: cleaned/prepared pandas data frame containing tweets
