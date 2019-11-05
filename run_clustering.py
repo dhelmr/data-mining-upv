@@ -10,8 +10,7 @@ from os import path
 import sys
 import time
 
-
-def main(src, dest_folder, end_k, m_list, n_iter, max_iter, threshold, verbose, init_strategy, auto_inc, exclude_last):
+def main(src, dest_folder, end_k, start_k, m_list, n_iter, max_iter, threshold, verbose, init_strategy, auto_inc, exclude_last):
     data = read_src_data(src)
     vecs = data["vectors"].values
     if exclude_last != 0:
@@ -19,7 +18,6 @@ def main(src, dest_folder, end_k, m_list, n_iter, max_iter, threshold, verbose, 
         print(f"Exclude last {exclude_last} instances from clustering")
     print("### Vectors loaded, start clustering...")
 
-    start_k = 2
     if auto_inc == False:
         start_k = end_k
 
@@ -48,7 +46,8 @@ if __name__ == '__main__':
         '--src', dest='src', help='path of the pre-processed and clean data with its doc2vec values', default="resources/tweets_test_vecs.vec")
     parser.add_argument('--dest', dest='dest', default="resources/clustering/",
                         help='folder where to save the clustering result')
-    parser.add_argument('-k', dest="k", default=10, type=int)
+    parser.add_argument('-k', dest="k_end", default=10, type=int)
+    parser.add_argument('--k-start', dest="k_start", default=2, type=int)
     parser.add_argument('-m', dest="m_list", default=2,nargs='+', type=float,
                         help="Parameter of the Minkowski-Distance (1=Manhatten distance; 2=Euclid distance). This can also be a list containing more values over which will be iterated.")
     parser.add_argument("--n_iter", dest="iter", default=10, type=int,
@@ -68,4 +67,4 @@ if __name__ == '__main__':
                     help="Excludes the last n instances from the clustering")
     args = parser.parse_args()
     
-    main(args.src, args.dest, args.k, args.m_list, args.iter, args.max_iter, args.threshold, args.verbose, args.init_strategy, args.auto_inc, args.exclude_last_n)
+    main(args.src, args.dest, args.k_end, args.k_start, args.m_list, args.iter, args.max_iter, args.threshold, args.verbose, args.init_strategy, args.auto_inc, args.exclude_last_n)
