@@ -37,6 +37,7 @@ def initialize_d2v_model(tweets_labeled, dm=0, negative=5, vector_size=200, min_
     initializes an d2v model with the given parameter. Also creates a vocab based on the given tweets
 
     source: https://radimrehurek.com/gensim/models/doc2vec.html
+    source: https://arxiv.org/pdf/1607.05368.pdf
 
     :param tweets_labeled: labeled tweets used to create vocab
     :param dm: 0 -> DM 'distributed memory', 1 -> DBOW 'distributed bag of words'
