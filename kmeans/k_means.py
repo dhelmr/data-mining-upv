@@ -86,7 +86,7 @@ class K_means():
         cycle = 0
         while not abort:
             self.update_closest_centroid_distances()
-
+            
             clusters_changed = self.determine_cluster_memberships()
             after_cluster_membership(self, cycle)
 
@@ -319,8 +319,8 @@ class K_means():
 Initialized with: k={self.k}, m={self.m}, threshold={self.threshold}, init_strategy={self.init_strategy}
 iterations run: {self.iterations_run}"""
 
-    def copy(self):
-        return K_means(k=self.k, m=self.m, init_strategy=self.init_strategy,
+    def copy(self, new_k):
+        return K_means(k=new_k, m=self.m, init_strategy=self.init_strategy,
                        max_iterations=self.max_iterations, threshold=self.threshold, verbose=self.verbose)
 
     def calc_SSE(self):
@@ -345,7 +345,7 @@ def minkowski(m, pointA, pointB, n_features):
         total = total + math.pow(base, m)
     return math.pow(total, 1/m)
 
-@numba.jit(nopython=True)
+# @numba.njit(nopython=True)
 def jit_calc_centroid(n, cluster_instances_i, instances):
     total = np.zeros(n)
     for instance_i in cluster_instances_i:
@@ -407,8 +407,8 @@ class K_means_multiple_times():
 class DoubleKInitialization():
     def __init__(self, orig_k_means):
         self.orig_k_means = orig_k_means
-        k_means = orig_k_means.copy()
-        k_means.k = min(2*orig_k_means.k, len(orig_k_means.instances))
+        new_k = min(2*orig_k_means.k, len(orig_k_means.instances))
+        k_means = orig_k_means.copy(new_k)
         k_means.init_strategy = Init_Strategy.RANDOM
         self.k_means = k_means
 
