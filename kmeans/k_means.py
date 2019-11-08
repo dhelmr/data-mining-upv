@@ -50,10 +50,7 @@ class K_means():
 
         self.locked = True
         self.validate_data(data)
-        self.instances = np.array(data)
-
-        # read dimension of feature vectors
-        self.n = len(data[0])
+        self.set_instances(data)
 
         self.upper_bound_distance_to_centroid = np.zeros(
             len(self.instances), dtype=float)
@@ -304,7 +301,7 @@ class K_means():
 
     def get_centroid(self, instance_i):
         """
-        returns the cluster membership of an instance after run() was executed
+        returns the corresponding centroid coordinates of an instance after run() was executed
         """
         centroid_i = self.cluster_mapping[instance_i]
         return self.centroids[centroid_i]
@@ -342,9 +339,17 @@ iterations run: {self.iterations_run}"""
         copy.first_instances = self.instances[0:20]
         pickle.dump(copy, open(file, "wb"))
 
+    def set_instances(self, data):
+        self.instances = np.array(data)
+        # read dimension of feature vectors
+        self.n = len(data[0])
 
-def from_file(file):
-    return pickle.load(open(file, "rb"))
+
+def from_file(file, data=[]):
+    kmeans = pickle.load(open(file, "rb"))
+    if data != []:
+        kmeans.set_instances(data)
+    return kmeans
 
 @numba.jit(nopython=True)
 def minkowski(m, pointA, pointB, n_features):
