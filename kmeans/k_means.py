@@ -323,7 +323,10 @@ iterations run: {self.iterations_run}"""
         pickle.dump(copy, open(file, "wb"))
 
     def _set_instances(self, data):
-        self.instances = np.array(data)
+        self.instances = np.zeros([len(data), len(data[0])], dtype=float)
+        for i in range(len(data)):
+            for feature_i in range(len(data[i])):
+                self.instances[i][feature_i] = data[i][feature_i]
         # read dimension of feature vectors
         self.n = len(data[0])
 
