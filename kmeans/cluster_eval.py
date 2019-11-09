@@ -215,6 +215,8 @@ def table_class_vs_cluster(original_X, k_means_obj, iris=False):
 
         collect_lst = []
 
+        original_X = pd.DataFrame(original_X)
+
         indices_class_2 = original_X[original_X[0] == 2].index.values
         indices_class_1 = original_X[original_X[0] == 1].index.values
         indices_class_0 = original_X[original_X[0] == 0].index.values
@@ -256,14 +258,14 @@ def table_class_vs_cluster(original_X, k_means_obj, iris=False):
     return comparison_df
 
 
-def give_external_eval(original_X, X, max_range, m, iris=False):
+def give_external_eval(original_X, X, max_range, m, dir_path, iris=False):
 
 
     print("#######  Results from Evaluation 2: External Criteria #########")
 
 
     """
-    these score cant really be used with a clustering where no known attributes exist
+    these scores cant really be used with a clustering where no known attributes exist
     
     if X is None:
         partition_labels = list(original_X.label.values)
@@ -312,14 +314,22 @@ def give_external_eval(original_X, X, max_range, m, iris=False):
 
         avrg_perc_lst = []
         list_k = list(range(2, max_range+2))
-        files = os.listdir("resources/small/clustering/m_1.5")
-        files.remove(".DS_Store")
-        sorted_files =  sorted(files[1:], key=lambda s: s.split("_")[1])
+        files = os.listdir(f"{dir_path}")
+        if ".DS_Store" in files:
+            files.remove(".DS_Store")
+        sorted_files =  sorted(files, key=lambda s: s.split("_")[3])
+
+        print(sorted_files)
 
         for k, filename in zip(list_k, sorted_files):
 
-            file = "resources/small/clustering/m_1.5/" + filename
-            print(file)
+            file = f"{dir_path}/" + filename
+
+            if os.stat(file).st_size == 0:
+                avr_perc = 0
+                avrg_perc_lst.append(avr_perc)
+                continue
+
             k_means = pickle.load(open(file, "rb"))
 
             result_df = table_class_vs_cluster(original_X, k_means)
@@ -327,10 +337,40 @@ def give_external_eval(original_X, X, max_range, m, iris=False):
             avr_perc = np.average(result_df.perc_biggest)
             avrg_perc_lst.append(avr_perc)
 
+        if len(list_k) > len(avrg_perc_lst):
+            x_axis_labels = list_k[:len(avrg_perc_lst)]
+
+        else:
+            x_axis_labels = list_k
+
         plt.figure(figsize=(6, 6))
-        plt.plot(list_k, avrg_perc_lst, '-o')
+        plt.plot(x_axis_labels, avrg_perc_lst, '-o')
         plt.xlabel(r'Number of clusters *k*')
         plt.ylabel('Average percentage of conformity from biggest clusters')
         plt.show()
 
 
+def external_eval_all_files(origin_path):
+
+    original_X = pd.read_csv("resources/small/clean.csv")
+
+    dirs_1 = os.listdir(origin_path)
+
+    if ".DS_Store" in dirs_1:
+        dirs_1.remove(".DS_Store")
+
+    for dir_1 in dirs_1:
+
+        origin_path_2 = origin_path + "/" + dir_1
+        dirs_2 =  os.listdir(origin_path_2)
+
+        if ".DS_Store" in dirs_2:
+            dirs_2.remove(".DS_Store")
+
+            for dir_2 in dirs_2:
+
+                dir_path = origin_path_2 + "/" + dir_2
+
+                print(f"Results of m: {dir_1} and init: {dir_2}")
+
+                give_external_eval(original_X, original_X, 50, 2.0, dir_path)
