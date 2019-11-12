@@ -1,38 +1,51 @@
-from k_means import K_means
-from cluster_eval import calc_see, plot_clusters_vs_see, plot_silhouettes
 import matplotlib.pyplot as plt
+import pandas as pd
 import random
+import pickle
 import numpy as np
 
-from sklearn.preprocessing import StandardScaler
+from k_means import K_means
+from cluster_eval import *
+from sklearn import datasets
+from sklearn.cluster import KMeans
+
+"""
+##Iris run ###
+iris = datasets.load_iris()
+X = iris.data
+Y = iris.target
+
+Y_df = pd.DataFrame(Y)
+
+give_external_eval(Y, X, 14, 2.0, True)
+
+k_means = K_means(k=8,m=2)
+k_means.run(X)
+give_tendency_eval(k_means)
+best_run = table_class_vs_cluster(Y, k_means, True)
 
 
-data = list()
-for i in range(100):
-    data.append([random.randint(0, 100), random.randint(0, 100)])
+
+### Test Run data #### 
+
+original_X = pd.read_csv("resources/small/clean.csv")
+dir_path = "resources/small/clustering/"
+give_external_eval(original_X, original_X, 14, 2.0, dir_path)
+
+#k_means_obj = pickle.load(open("resources/small/clustering/m_2.0/k_2_m_2.0_1572688563.3661783","rb"))
+k_means_obj = pickle.load(open("resources/small/clustering/m_2.0/k_13_m_2.0_1572698575.1576815","rb"))
+
+give_tendency_eval(k_means_obj)
+best_run = table_class_vs_cluster(original_X, k_means_obj)
+
+"""
+
+external_eval_all_files("resources/without-100000")
 
 
-def plot_k_means(k_means):
-    # plt.waitforbuttonpress()
-    # plt.plot(k_means.instance_map)
-    plt.clf()
-    colors = 10 * ["r", "g", "c", "b", "k", "y"]
+#result_df = table_class_vs_cluster(original_X, k_means_obj, 0)
+#test = give_internal_eval(original_X)
 
-    for cluster_i in k_means.instances_by_cluster:
-        color = colors[cluster_i]
-        centroid = k_means.centroids[cluster_i]
-        plt.scatter(centroid[0], centroid[1], marker="X", s=50)
-        for i in k_means.instances_by_cluster[cluster_i]:
-            instance = k_means.instances[i]
-            plt.scatter(instance[0], instance[1], color=color, s=30)
-    plt.show()
+#give_tendency_eval(k_means)
+#give_external_eval(Y_df, X, 25, 2, True)
 
-
-##### Evaluation 1: intra cluster cohesion with elbow method #####
-
-# Standardize the data
-X_std = StandardScaler().fit_transform(data)
-
-#plot_clusters_vs_see(X_std, 10)
-
-plot_silhouettes(X_std, 4, 4)
