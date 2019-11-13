@@ -14,13 +14,13 @@ def main(filename, k_means_path):
 
     # tweets (pickle)
     with open(filename, 'rb') as f:
-        vecs = pickle.load(f)
+        vecs = pickle.load(f)["vectors"]
 
     # TODO glob
     kmeans = 'kmeans/models/k=2_m=2.0_init=1_1573230238.2595701.result'
 
-    new_instances = vecs[-100000:]
-    kmeans = from_file(kmeans, new_instances)
+    training_instances = vecs[:-100000]
+    kmeans = from_file(kmeans, training_instances)
 
     # iterating k_means models from path
     # for filename in glob.glob(f'{k_means_path}/*.result'):
