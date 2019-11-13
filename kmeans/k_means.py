@@ -351,7 +351,7 @@ iterations run: {self.iterations_run}"""
 
 def from_file(file, data=[]):
     kmeans = pickle.load(open(file, "rb"))
-    if data != []:
+    if len(data) != 0:
         kmeans._set_instances(data)
     return kmeans
 
