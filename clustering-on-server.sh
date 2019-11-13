@@ -3,6 +3,7 @@
 # Script for running the clustering automatically on the server
 
 mkdir -p logs
+EXCLUDE_LAST="500"
 
 function start_clustering(){
     VECS="$1"
@@ -18,7 +19,7 @@ function start_clustering(){
     mkdir -p $DEST
 
     echo "Start clustering with K=$K_START, M=$M, INIT=$INIT_STRATEGY"
-    python run_clustering.py --k-start $K_START -k $K_END -m $M --src $VECS --dest "$DEST" --max_iter 50 --n_iter $N_ITER --init_strategy $INIT_STRATEGY --auto_increment True --verbose True --exclude_last_n 100000 --threshold 0.005 > "logs/$BASE_VECS-m$M-k$K_START-kend$K_END-init$INIT-$(date)"
+    python run_clustering.py --k-start $K_START -k $K_END -m $M --src $VECS --dest "$DEST" --max_iter 50 --n_iter $N_ITER --init_strategy $INIT_STRATEGY --auto_increment True --verbose True --exclude_last_n $EXCLUDE_LAST --threshold 0.005 > "logs/$BASE_VECS-m$M-k$K_START-kend$K_END-init$INIT-$(date)"
 }
 
 start_clustering $1 2 10 2 1 3 &

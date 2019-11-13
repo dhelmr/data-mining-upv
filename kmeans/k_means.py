@@ -162,6 +162,7 @@ class K_means():
                 min_distance = distance
         return (min_centroid_i, min_distance)
 
+
     # calculates the Minkowski distance between an instance and a centroid
     # both arguments must be passed as an index of the corresponding list (self.instances, self.centroids)
     # the parameter m (or alpha) is read from self.m
@@ -329,7 +330,24 @@ iterations run: {self.iterations_run}"""
                 self.instances[i][feature_i] = data[i][feature_i]
         # read dimension of feature vectors
         self.n = len(data[0])
-
+        
+    def predict(self, new_instance):
+        """
+        Introduces a new instance to the clustering result (after run() is executed)
+        and returns a tuple of:
+        1. the nearest cluster index
+        2. the distance to that cluster
+        """
+        min_centroid_i = 0
+        min_distance = self.distance(
+            new_instance, self.centroids[0])
+        for centroid_i in range(1, self.k):
+            distance = self.distance(new_instance, self.centroids[centroid_i])
+            if distance < min_distance:
+                min_centroid_i = centroid_i
+                min_distance = distance
+        return (min_centroid_i, min_distance)
+        
 
 def from_file(file, data=[]):
     kmeans = pickle.load(open(file, "rb"))
