@@ -9,18 +9,35 @@ import pickle
 import argparse
 from kmeans.k_means import from_file
 
+def get_original_text(test_index):
+    #read from csv
+    return 1
 
 def main(filename, k_means_path):
-
-    # tweets (pickle)
-    with open(filename, 'rb') as f:
-        vecs = pickle.load(f)["vectors"]
-
     # TODO glob
     kmeans = 'kmeans/models/k=2_m=2.0_init=1_1573230238.2595701.result'
+    # tweets (pickle)
+    with open(filename, 'rb') as f:
+        cleaned_data = pickle.load(f)
 
-    training_instances = vecs[:-100000]
-    kmeans = from_file(kmeans, training_instances)
+    
+
+    vecs = cleaned_data["vectors"]
+    
+    kmeans = from_file(k_means_path)
+    kmeans.n = len(vecs[0])
+    testing_instances = vecs[-100000:]
+    print(testing_instances)
+
+    for i in range(10):
+        instance = testing_instances[377444+i]
+        cluster, distance = kmeans.predict(instance)
+        instance_indexes = list(kmeans.instances_by_cluster[cluster])
+        print("##", cluster, distance)
+        for index in instance_indexes[:10]:
+            text = cleaned_data["text"][index]
+            print(text)
+       
 
     # iterating k_means models from path
     # for filename in glob.glob(f'{k_means_path}/*.result'):
