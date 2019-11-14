@@ -44,7 +44,7 @@ class K_means():
 
     def run(self, data, after_centroid_calculation=lambda k_means, cycle: None,
             after_cluster_membership=lambda k_means, cycle: None,
-            centroid_initialization=None):
+            centroid_initialization=None, double_k_result = None):
         if self.locked == True:
             raise Exception("clustering already is running")
 
@@ -63,7 +63,7 @@ class K_means():
         if centroid_initialization != None:
             self.centroids = copy.deepcopy(centroid_initialization)
         else:
-            self.centroids = self._init_centroids()
+            self.centroids = self._init_centroids(double_k_result)
 
         # store the initial centroid configuration for analysis purposes
         self.initial_centroids = copy.deepcopy(self.centroids)
@@ -124,7 +124,7 @@ class K_means():
             
     # Initializes the centroids according to the initialization strategy (self.init_strategy)
     # See the Init_Strategy enum for possible values
-    def _init_centroids(self):
+    def _init_centroids(self, double_k_result = None):
         centroids = []
         if self.init_strategy == Init_Strategy.RANDOM:
             # TODO this has potentially infinite runtime, but takes less space than making a in-memory copy of the data
@@ -135,7 +135,10 @@ class K_means():
                     centroids.append(random_instance)
         elif self.init_strategy == Init_Strategy.DOUBLE_K_FIRST:
             initializer = DoubleKInitialization(self)
-            initializer.run()
+            if double_k_result == None :
+                initializer.run()
+            else: 
+                initializer.set_double_k_result(double_k_result)
             return initializer.get_centroids()
         else:
             raise Exception(f"{self.init_strategy} not supported yet")
@@ -389,7 +392,8 @@ class K_means_multiple_times():
     def run(self, n_iterations, data,
             between_iter_fn=lambda iteration, k_means: None,
             after_centroid_calculation=lambda k_means, cycle: None,
-            after_cluster_membership=lambda k_means, cycle: None):
+            after_cluster_membership=lambda k_means, cycle: None,
+            double_k_result=None):
         """
         Runs the K_means algorithm n times and returns the best-performing k_means instance
         (the one with the lowest total distance error)
@@ -404,7 +408,7 @@ class K_means_multiple_times():
                               max_iterations=self.max_iterations,
                               m=self.m, threshold=self.threshold, verbose=self.verbose)
             k_means.run(data, after_centroid_calculation=after_centroid_calculation,
-                        after_cluster_membership=after_cluster_membership)
+                        after_cluster_membership=after_cluster_membership, double_k_result=double_k_result)
 
             sse = k_means.calc_SSE()
             if best_sse == None or sse < best_sse:
@@ -434,6 +438,9 @@ class DoubleKInitialization():
         if (self.orig_k_means.verbose == True):
             print("Start k-means run with 2k for initialization")
         self.k_means.run(self.orig_k_means.instances)
+
+    def set_double_k_result(self, k_means):
+        self.k_means = k_means
 
     def get_centroids(self):
         sorted_centroid_indexes = list(range(0, self.k_means.k))
