@@ -237,7 +237,7 @@ def table_class_vs_cluster(original_X, k_means_obj, iris=False):
             else:
 
                 perc_of_biggest_cluster = max(tot_nbr_0, tot_nbr_1, tot_nbr_2)/ sum([tot_nbr_0, tot_nbr_1, tot_nbr_2])
-                weight_of_cluster = len(original_X) / sum([tot_nbr_0, tot_nbr_1, tot_nbr_2])
+                weight_of_cluster = sum([tot_nbr_0, tot_nbr_1, tot_nbr_2]) / len(original_X)
 
             collect_lst.append([tot_nbr_0, tot_nbr_1, tot_nbr_2, perc_of_biggest_cluster, weight_of_cluster])
 
@@ -265,7 +265,7 @@ def table_class_vs_cluster(original_X, k_means_obj, iris=False):
 
             else:
                 perc_of_biggest_cluster = max(tot_nbr_0, tot_nbr_1) / sum([tot_nbr_0, tot_nbr_1])
-                weight_of_cluster = len(original_X) / sum([tot_nbr_0, tot_nbr_1])
+                weight_of_cluster = sum([tot_nbr_0, tot_nbr_1]) / len(original_X)
 
             collect_lst.append([tot_nbr_0, tot_nbr_1, perc_of_biggest_cluster, weight_of_cluster])
 
