@@ -10,8 +10,9 @@ from wordcloud import WordCloud
 
 def plotting(word_cloud):
     """
+    Method to simply plot the generated word cloud (if needed)
 
-    :param word_cloud:
+    :param word_cloud: generated word cloud
     :return:
     """
     plt.imshow(word_cloud, interpolation='bilinear')
@@ -28,7 +29,7 @@ def main(plot, save):
     text = "Hello world my little darling"
 
     wordcloud = WordCloud(max_words=1000, background_color='white', scale=3, relative_scaling=0.5,
-                   width=500, height=400, random_state=1)
+                          width=500, height=400, random_state=1)
     wordcloud.generate(text)
 
     # plotting word cloud
