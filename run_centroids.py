@@ -7,44 +7,98 @@ Applying clustering on unseen tweets and add corresponding cluster (nearest cent
 import glob
 import pickle
 import argparse
+import pandas as pd
 from kmeans.k_means import from_file
+
 
 def get_original_text(test_index):
     #read from csv
     return 1
 
-def main(filename, k_means_path):
-    # TODO glob
-    kmeans = 'kmeans/models/k=2_m=2.0_init=1_1573230238.2595701.result'
-    # tweets (pickle)
+
+def load_resources(filename, k_means_path='kmeans/models/k=2_m=2.0_init=1_1573230238.2595701.result'):
+
+    # cleaned data
+    k_means_path = 'kmeans/models/k=2_m=2.0_init=1_1573230238.2595701.result'
     with open(filename, 'rb') as f:
         cleaned_data = pickle.load(f)
 
-    
+    # extract vectors
+    vectors = cleaned_data["vectors"]
 
-    vecs = cleaned_data["vectors"]
-    
+    # prepare k means
+    k_means_path = 'kmeans/models/k=2_m=2.0_init=1_1573230238.2595701.result'
     kmeans = from_file(k_means_path)
-    kmeans.n = len(vecs[0])
-    testing_instances = vecs[-100000:]
-    print(testing_instances)
+    kmeans.n = len(vectors[0])
 
-    for i in range(10):
+    return cleaned_data, vectors, kmeans
+
+
+def write_to_file(instance_indexes):
+
+    return None
+
+
+def get_clusters(kmeans, vectors):
+    """
+
+    :param kmeans:
+    :param vectors:
+    :return:
+    """
+    clusters = list()
+    distances = list()
+
+    for element in vectors:
+        cluster, distance = kmeans.predict(element)
+        clusters.append(cluster)
+        distances.append(distance)
+
+    # concat series to data frame
+    result = pd.DataFrame({'vector': vectors, 'cluster': clusters, 'distance': distances})
+    return result
+
+
+def main(filename, k_means_path):
+    # TODO
+
+    # load necessary things
+    data_cleaned, vecs, kmeans = load_resources(filename, k_means_path)
+    raw_data = pd.read_csv("resources/raw/tweets_test.csv")
+
+    # separate testing instances (last 100.000 entries)
+    testing_instances = vecs[-100000:]
+    df = get_clusters(kmeans, testing_instances)
+
+    # sample for each class
+    clusters = df.cluster.unique()
+
+    with open('tweet_comparison.txt', 'w') as file:
+        for cluster in clusters:
+            sample = df[df.cluster == cluster].sample(1)
+            print(f"\n### New tweet (cluster {cluster}):  ###\n"
+                  f"CLEANED: {data_cleaned['text'][sample.index]}\n"
+                  f"RAW: {raw_data['text'][sample.index]}", file=file)
+
+            instance_indexes = list(kmeans.instances_by_cluster[cluster])
+            for index in instance_indexes[:3]:
+                print(data_cleaned["text"][index], file=file)
+
+
+
+    """
+        for i in range(10):
         instance = testing_instances[377444+i]
         cluster, distance = kmeans.predict(instance)
+
         instance_indexes = list(kmeans.instances_by_cluster[cluster])
+
         print("##", cluster, distance)
         for index in instance_indexes[:10]:
             text = cleaned_data["text"][index]
             print(text)
        
-
-    # iterating k_means models from path
-    # for filename in glob.glob(f'{k_means_path}/*.result'):
-
-    # compare with and calculate metrics
-
-    # save results to file / document performance
+    """
 
     print("### ENDED ####")
 
