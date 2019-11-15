@@ -255,7 +255,7 @@ class K_means():
             if upper_bound_distance > m:
                 self.upper_bound_distance_to_centroid[instance_i] = self.centroid_instance_distance(
                     instance_i, old_centroid_i)
-                if True or self.upper_bound_distance_to_centroid[instance_i] > m:
+                if self.upper_bound_distance_to_centroid[instance_i] > m:
                     closest_centroid_i = self._set_cluster_membership(
                         instance_i)
                     # check if the centroid must be updated
