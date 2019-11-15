@@ -14,11 +14,37 @@ warnings.filterwarnings('ignore')
 
 class Init_Strategy(IntEnum):
     RANDOM = 1,
-    SPACE_DIVISION = 2,
     DOUBLE_K_FIRST = 3
 
-
 class K_means():
+    """Central class for running the k-means algorithm and accessing its clustering results. 
+    
+    Attributes
+    ----------
+    k   The number of clusters
+    m   The parameter used for calculating the Minkowski distance
+    init_strategy   Determines the way the centroids will be initialized. Chose one of the Init_Strategy enum.
+    max_iterations  The maximum number of iterations (cycles) the algorithm will run
+    threshold       The algorithm will abort if the changed distance of all clusters is lower then this threshold
+    verbose         If True, there will be a verbose output while run() is executed that
+                    informs about the current progress
+    n   The number of features of the instances
+    instances   The data points that are used for the clustering
+    centroids   A list containing the centroid coordinates for each cluster, stored as numpy arrays
+                Each centroid is accessed by it's cluster index.
+    cluster_mapping A list that maps each instance to the cluster index it belongs to.
+                    The list is accessed by the index of the self.instances[] list. 
+                    Example:    cluster_index = self.cluster_mapping[4]    
+                        cluster_index is the index of the cluster instance 4 belongs to.
+                                centroid_coor = self.centroids[cluster_index]
+                        centroid_coor contains the coordinates of the centroid that belongs to instance 4
+    instances_by_cluster    A dict that contains for each cluster index a set of
+                            the instances that are in this cluster.
+    iterations_run  will contain the number of iterations k-means run, after it has finished.
+
+    Other attributes are used for internal purposed mainly.
+
+    """
     def __init__(self, k=5, m=2,
                  init_strategy=Init_Strategy.RANDOM,
                  max_iterations=50000,
@@ -37,14 +63,32 @@ class K_means():
         self.iterations_run = -1
         self.cluster_mapping = None
 
-        """
-        Stores the distance to the closest other centroid
-        """
+        #  Stores the distance to the closest other centroid
         self.closest_centroid_distances = np.zeros(k)
+
+        # Initialize n (number of features) with an invalid value because there no instances set yet
+        self.n = -1
+        self.instances = []
 
     def run(self, data, after_centroid_calculation=lambda k_means, cycle: None,
             after_cluster_membership=lambda k_means, cycle: None,
-            centroid_initialization=None, double_k_result = None):
+            centroid_initialization=None, double_k_result = None) -> int:
+        """Executes the k-means run with the instances specified with the data argument.
+
+        It is possible to pass an initialization of the centroids, in that case the initialization strategy
+        (self.init_strategy) will be ignored.
+
+        If double_k_result is specified and the DoubleK initialization strategy is chosen, the k-means run with 2k
+        clusters will be skiped, and instead the passed result will be used for the initialization.
+        (See DoubleKInitialization for details)
+
+        It is possible to specify two functions that are called as hooks while the algorithm is running:
+        1. after_centroid_calculation is called after the centroids of all clusters are re-calculated
+        2. after_cluster_membership is called after the cluster membership of the instances was determined.
+        Both functions will be called by passing them the current K_means instance
+            and the iteration number of k-means (cycle).
+        """
+
         if self.locked == True:
             raise Exception("clustering already is running")
 
@@ -52,7 +96,7 @@ class K_means():
         self._validate_data(data)
         self._set_instances(data)
 
-        # initiaze data structures that are used for determining possible skips later
+        # Initialize data structures that are used for determining possible skips later
         self.upper_bound_distance_to_centroid = np.zeros(
             len(self.instances), dtype=float)
         self.lower_bound_second_closest_centroid = np.zeros(
@@ -150,11 +194,15 @@ class K_means():
             raise Exception(
                 f"Cannot group {len(data)} data instances into {self.k} clusters!")
 
-    # determines the closest centroid for a data instance according to the current clusters
-    # the result is a tuple (centroid_index, distance) which contains:
-    # 1.the index of the corresponding centroid of the self.centroids array
-    # 2.the distance to this centroid
-    def closest_centroid(self, instance_i):
+    def closest_centroid(self, instance_i) -> (int, float):
+        """
+        determines the closest centroid for a data instance according to the current clusters
+        the result is a tuple (centroid_index, distance) which contains:
+        1. The index of the corresponding centroid of the self.centroids array.  
+            The coordinates of the centroid can be looked up in the list
+            self.centroids[] with this index.
+        2. The distance to this centroid
+        """
         min_centroid_i = 0
         min_distance = self.centroid_instance_distance(
             instance_i, centroid_i=0)
@@ -165,16 +213,20 @@ class K_means():
                 min_distance = distance
         return (min_centroid_i, min_distance)
 
-
-    # calculates the Minkowski distance between an instance and a centroid
-    # both arguments must be passed as an index of the corresponding list (self.instances, self.centroids)
-    # the parameter m (or alpha) is read from self.m
     def centroid_instance_distance(self, instance_i, centroid_i):
+        """
+        calculates the Minkowski distance between an instance and a centroid
+        both arguments must be passed as an index of the corresponding list (self.instances, self.centroids)
+        the parameter m (or alpha) is read from self.m
+        """
         return self.distance(self.instances[instance_i], self.centroids[centroid_i])
 
-    # calculates the Minowski distance between two points
-    # the points must be represented by arrays/lists of self.n dimension
+
     def distance(self, pointA, pointB):
+        """Calculates the Minowski distance between two points.
+        The points must be represented by arrays/lists of self.n dimension
+        """
+
         return minkowski(self.m, pointA, pointB, self.n)
 
     def _update_closest_centroid_distances(self):
@@ -234,7 +286,8 @@ class K_means():
         self.lower_bound_second_closest_centroid[instance_i] = min_distance
 
     def _update_centroids(self):
-        # This will contain the maximum distance between an old and its update centroid (used for the treshold termination criterion)
+        # This will contain the maximum distance between an old and
+        # its updated centroid (used for the treshold termination criterion)
         max_centroids_change = 0
 
         # calculate new centroids for each cluster
@@ -279,15 +332,15 @@ class K_means():
                     self.last_centroid_changes[r]
 
     def get_centroid(self, instance_i):
-        """
-        returns the corresponding centroid coordinates of an instance after run() was executed
-        """
+        """Returns the corresponding centroid coordinates of an instance after run() was executed"""
         centroid_i = self.cluster_mapping[instance_i]
         return self.centroids[centroid_i]
 
     def to_file(self, file_name):
-        """
-        Stores the kmeans object as a pickle file that can later be read with from_file()
+        """Stores the kmeans object as a pickle file that can later be read with from_file()
+        
+        This will store all internal data structures as well, including instances. For a large dataset, 
+        consider using result_to_file().
         """
         file = open(file_name, 'wb')
         pickle.dump(self, file)
@@ -299,13 +352,12 @@ Initialized with: k={self.k}, m={self.m}, threshold={self.threshold}, init_strat
 iterations run: {self.iterations_run}"""
 
     def copy(self, new_k):
+        """Returns a k-means instance with the same configuration, but without any results"""
         return K_means(k=new_k, m=self.m, init_strategy=self.init_strategy,
                        max_iterations=self.max_iterations, threshold=self.threshold, verbose=self.verbose)
 
-    def calc_SSE(self):
-        """
-        Calculates the squared summed squared error of all instance-centroid distances
-        """
+    def calc_SSE(self) -> float:
+        """Calculates the squared summed squared error of all instance-centroid distances."""
         total = 0
         for instance_i in range(len(self.instances)):
             centroid_i = self.cluster_mapping[instance_i]
@@ -314,9 +366,13 @@ iterations run: {self.iterations_run}"""
         return total
 
     def result_to_file(self, file):
-        """
-        Stores the result of the clustering (after run()), without datastructures only used for the algorithm 
-        and without the actual instances
+        """Stores the clustering result to a file using pickle. It can be restored with from_file()
+
+        Note that the file won't contain datastructures that are only used for the algorithm 
+        and neither the actual instances that were used for clustering. The instances can later only
+        be referenced by their index. Use from_file(file, instances) for restoring the k-means object
+        including the instances. to_file() would store the complete K_means object to a file including
+        all internal data structures.
         """
         copy = self.copy(new_k= self.k)
         copy.cluster_mapping = self.cluster_mapping
@@ -324,9 +380,14 @@ iterations run: {self.iterations_run}"""
         copy.instances_by_cluster = self.instances_by_cluster
         copy.first_instances = self.instances[0:20]
         copy.initial_centroids = self.initial_centroids
+        copy.n = self.n
         pickle.dump(copy, open(file, "wb"))
 
     def _set_instances(self, data):
+        """Internal method that loads the instances that are later used for the clustering. 
+        It also reads the dimension of the instances (i.e. the number of features) which is
+        called n here.
+        """
         self.instances = np.zeros([len(data), len(data[0])], dtype=float)
         for i in range(len(data)):
             for feature_i in range(len(data[i])):
@@ -352,14 +413,14 @@ iterations run: {self.iterations_run}"""
         return (min_centroid_i, min_distance)
         
 
-def from_file(file, data=[]):
+def from_file(file, data=[]) -> K_means:
     kmeans = pickle.load(open(file, "rb"))
     if len(data) != 0:
         kmeans._set_instances(data)
     return kmeans
 
 @numba.jit(nopython=True)
-def minkowski(m, pointA, pointB, n_features):
+def minkowski(m, pointA, pointB, n_features) -> float:
     total = 0
     for feature_i in range(n_features):
         base = abs(pointA[feature_i] - pointB[feature_i])
@@ -377,6 +438,12 @@ def jit_calc_centroid(n, cluster_instances_i, instances):
     return total/n_instances
 
 class K_means_multiple_times():
+    """A wrapper around K_means for running k-means multiple times with the same configuration
+
+    The best result is chosen after all runs are executed by comparing the squared sum error.
+    The purpose of this class is to sort out poor clustering results that are caused by a bad
+    initialization, which can happen especially with the random initialization
+    """
     def __init__(self, k=5, m=2,
                  init_strategy=Init_Strategy.RANDOM,
                  max_iterations=50000,
@@ -393,7 +460,7 @@ class K_means_multiple_times():
             between_iter_fn=lambda iteration, k_means: None,
             after_centroid_calculation=lambda k_means, cycle: None,
             after_cluster_membership=lambda k_means, cycle: None,
-            double_k_result=None):
+            double_k_result=None) -> K_means:
         """
         Runs the K_means algorithm n times and returns the best-performing k_means instance
         (the one with the lowest total distance error)
@@ -425,8 +492,13 @@ class K_means_multiple_times():
 
         return best_k_means
 
-
 class DoubleKInitialization():
+    """Helper class for the double k initialization
+
+    Based on a K_means configuration, it can execute another k-means run with 2k clusters and return k 
+    clusters with the lowest intra-cluster distance. These centroids can then be used sa the initialization
+    for the original K_means object.
+    """
     def __init__(self, orig_k_means):
         self.orig_k_means = orig_k_means
         new_k = min(2*orig_k_means.k, len(orig_k_means.instances))
@@ -434,15 +506,22 @@ class DoubleKInitialization():
         k_means.init_strategy = Init_Strategy.RANDOM
         self.k_means = k_means
 
-    def run(self):
+    def run(self) -> None:
+        """Executes the 2k k-means run."""
         if (self.orig_k_means.verbose == True):
             print("Start k-means run with 2k for initialization")
         self.k_means.run(self.orig_k_means.instances)
 
-    def set_double_k_result(self, k_means):
+    def set_double_k_result(self, k_means) -> None:
+        """Sets the 2k k-means result
+        
+        This can be used if the 2k k-means result was already executed previously.
+        In this case, it is not needed to execute run().
+        """
         self.k_means = k_means
 
-    def get_centroids(self):
+    def get_centroids(self) -> list:
+        """Return the k best centroids (with the lowest intra-cluster distance) of the k-means run with 2k clusters"""
         sorted_centroid_indexes = list(range(0, self.k_means.k))
         sorted_centroid_indexes.sort(
             key=lambda cluster_i: self.intra_cluster_distance(cluster_i))
