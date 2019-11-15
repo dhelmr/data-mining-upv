@@ -1,3 +1,7 @@
+"""
+Runs the clustering algorithm.
+"""
+
 from kmeans.k_means import K_means_multiple_times as K_means
 import kmeans.k_means as k_means
 import argparse
@@ -33,7 +37,6 @@ def main(src, dest_folder, end_k, start_k, m_list, n_iter, max_iter, threshold, 
             result = km.run(n_iter, vecs, double_k_result= double_k_result)
             print(f"### Best result for k={k}, m={m}: {result}")
 
-            # TODO more parameter in file
             dest_file = path.join(
                 dest_folder, f"k={result.k}_m={result.m}_init={result.init_strategy}_{time.time()}.result")
             result.result_to_file(dest_file)
