@@ -1,3 +1,7 @@
+"""
+Runs the clustering algorithm.
+"""
+
 from kmeans.k_means import K_means_multiple_times as K_means
 import kmeans.k_means as k_means
 import argparse
@@ -10,7 +14,7 @@ from os import path
 import sys
 import time
 
-def main(src, dest_folder, end_k, start_k, m_list, n_iter, max_iter, threshold, verbose, init_strategy, auto_inc, exclude_last):
+def main(src, dest_folder, end_k, start_k, m_list, n_iter, max_iter, threshold, verbose, init_strategy, auto_inc, exclude_last, double_k_result_path):
     data = read_src_data(src)
     vecs = data["vectors"].values
     if exclude_last != 0:
@@ -21,14 +25,18 @@ def main(src, dest_folder, end_k, start_k, m_list, n_iter, max_iter, threshold, 
     if auto_inc == False:
         start_k = end_k
 
+    double_k_result = None
+    if double_k_result_path != "":
+        double_k_result = k_means.from_file(double_k_result_path, vecs)
+        print(double_k_result)
+    
     for m in m_list:
         for k in range(start_k, end_k+1):
             print(f"### k={k}, m={m}")
             km = K_means(k=k, m=m, max_iterations=max_iter, threshold = threshold, verbose = verbose, init_strategy=init_strategy)
-            result = km.run(n_iter, vecs)
+            result = km.run(n_iter, vecs, double_k_result= double_k_result)
             print(f"### Best result for k={k}, m={m}: {result}")
 
-            # TODO more parameter in file
             dest_file = path.join(
                 dest_folder, f"k={result.k}_m={result.m}_init={result.init_strategy}_{time.time()}.result")
             result.result_to_file(dest_file)
@@ -59,12 +67,14 @@ if __name__ == '__main__':
     parser.add_argument("--verbose", dest="verbose", default=True, type=bool,
                         help="Verbose output on/off")
     parser.add_argument("--auto_increment", dest="auto_inc", default=False, type=bool,
-                    help="Automatically increment k from k until the value specified with -k is reached")
+                    help="Automatically increment k from --k-start until the value specified with -k is reached")
     init_strategy_values = ", ".join( [f"{s.value}={s.name}" for s in k_means.Init_Strategy])
     parser.add_argument("--init_strategy", dest="init_strategy", default=k_means.Init_Strategy.RANDOM, type=int,
                         help="Init Strategy, one of "+init_strategy_values)
     parser.add_argument("--exclude_last_n", dest="exclude_last_n", default=0, type=int,
                     help="Excludes the last n instances from the clustering")
+    parser.add_argument("--double_k_result", dest="double_k_result", default="", type=str,
+                    help="if init_strategy=3 is set, you can specify the double_k result here, so that k-means don't have to be run twice")         
     args = parser.parse_args()
     
-    main(args.src, args.dest, args.k_end, args.k_start, args.m_list, args.iter, args.max_iter, args.threshold, args.verbose, args.init_strategy, args.auto_inc, args.exclude_last_n)
+    main(args.src, args.dest, args.k_end, args.k_start, args.m_list, args.iter, args.max_iter, args.threshold, args.verbose, args.init_strategy, args.auto_inc, args.exclude_last_n, args.double_k_result)

@@ -229,11 +229,19 @@ def table_class_vs_cluster(original_X, k_means_obj, iris=False):
             tot_nbr_1 = len(np.intersect1d(indices_class_1, indices_cluster_i))
             tot_nbr_0 = len(np.intersect1d(indices_class_0, indices_cluster_i))
 
-            perc_of_biggest_cluster = max(tot_nbr_0, tot_nbr_1, tot_nbr_2)/ sum([tot_nbr_0, tot_nbr_1, tot_nbr_2])
+            if sum([tot_nbr_0, tot_nbr_1, tot_nbr_2]) == 0:
 
-            collect_lst.append([tot_nbr_0, tot_nbr_1, tot_nbr_2, perc_of_biggest_cluster])
+                perc_of_biggest_cluster = 0.0
+                weight_of_cluster = 0.0
 
-        comparison_df = pd.DataFrame(collect_lst, columns=["class_0","class_1", "class_2","perc_biggest"])
+            else:
+
+                perc_of_biggest_cluster = max(tot_nbr_0, tot_nbr_1, tot_nbr_2)/ sum([tot_nbr_0, tot_nbr_1, tot_nbr_2])
+                weight_of_cluster = sum([tot_nbr_0, tot_nbr_1, tot_nbr_2]) / len(original_X)
+
+            collect_lst.append([tot_nbr_0, tot_nbr_1, tot_nbr_2, perc_of_biggest_cluster, weight_of_cluster])
+
+        comparison_df = pd.DataFrame(collect_lst, columns=["class_0","class_1", "class_2","perc_biggest","cluster_weight"])
 
     else:
 
@@ -249,16 +257,24 @@ def table_class_vs_cluster(original_X, k_means_obj, iris=False):
             tot_nbr_1 = len(np.intersect1d(indices_class_1, indices_cluster_i))
             tot_nbr_0 = len(np.intersect1d(indices_class_0, indices_cluster_i))
 
-            perc_of_biggest_cluster = max(tot_nbr_0, tot_nbr_1) / sum([tot_nbr_0, tot_nbr_1])
 
-            collect_lst.append([tot_nbr_0, tot_nbr_1, perc_of_biggest_cluster])
+            if sum([tot_nbr_0, tot_nbr_1]) == 0:
 
-        comparison_df = pd.DataFrame(collect_lst, columns=["class_0", "class_1", "perc_biggest"])
+                perc_of_biggest_cluster = 0.0
+                weight_of_cluster = 0.0
+
+            else:
+                perc_of_biggest_cluster = max(tot_nbr_0, tot_nbr_1) / sum([tot_nbr_0, tot_nbr_1])
+                weight_of_cluster = sum([tot_nbr_0, tot_nbr_1]) / len(original_X)
+
+            collect_lst.append([tot_nbr_0, tot_nbr_1, perc_of_biggest_cluster, weight_of_cluster])
+
+        comparison_df = pd.DataFrame(collect_lst, columns=["class_0", "class_1", "perc_biggest", "cluster_weight"])
 
     return comparison_df
 
 
-def give_external_eval(original_X, X, max_range, m, dir_path, iris=False):
+def give_external_eval(original_X, X, max_range, m, dir_path=None, print_message=None, iris=False):
 
 
     print("#######  Results from Evaluation 2: External Criteria #########")
@@ -300,14 +316,16 @@ def give_external_eval(original_X, X, max_range, m, dir_path, iris=False):
             k_means.run(X)
 
             result_df = table_class_vs_cluster(original_X, k_means, True)
+            weights = result_df
 
-            avr_perc = np.average(result_df.perc_biggest)
+
+            avr_perc = np.average(result_df.perc_biggest, weights=result_df.cluster_weight)
             avrg_perc_lst.append(avr_perc)
 
         plt.figure(figsize=(6, 6))
         plt.plot(list_k, avrg_perc_lst, '-o')
         plt.xlabel(r'Number of clusters *k*')
-        plt.ylabel('Average percentage of conformity from biggest clusters')
+        plt.ylabel('Weighted average % of match: cluster vs class')
         plt.show()
 
     else:
@@ -317,9 +335,8 @@ def give_external_eval(original_X, X, max_range, m, dir_path, iris=False):
         files = os.listdir(f"{dir_path}")
         if ".DS_Store" in files:
             files.remove(".DS_Store")
-        sorted_files =  sorted(files, key=lambda s: s.split("_")[3])
-
-        print(sorted_files)
+        sorted_files =  sorted(files, key=lambda s: int(s.split("_")[0].split("=")[1]))
+        print( sorted_files )
 
         for k, filename in zip(list_k, sorted_files):
 
@@ -334,7 +351,7 @@ def give_external_eval(original_X, X, max_range, m, dir_path, iris=False):
 
             result_df = table_class_vs_cluster(original_X, k_means)
 
-            avr_perc = np.average(result_df.perc_biggest)
+            avr_perc = np.average(result_df.perc_biggest,weights=result_df.cluster_weight)
             avrg_perc_lst.append(avr_perc)
 
         if len(list_k) > len(avrg_perc_lst):
@@ -346,7 +363,8 @@ def give_external_eval(original_X, X, max_range, m, dir_path, iris=False):
         plt.figure(figsize=(6, 6))
         plt.plot(x_axis_labels, avrg_perc_lst, '-o')
         plt.xlabel(r'Number of clusters *k*')
-        plt.ylabel('Average percentage of conformity from biggest clusters')
+        plt.ylabel('Weighted average % of match: cluster vs class')
+        plt.title(print_message)
         plt.show()
 
 
@@ -367,10 +385,10 @@ def external_eval_all_files(origin_path):
         if ".DS_Store" in dirs_2:
             dirs_2.remove(".DS_Store")
 
-            for dir_2 in dirs_2:
+        for dir_2 in dirs_2:
 
-                dir_path = origin_path_2 + "/" + dir_2
+            dir_path = origin_path_2 + "/" + dir_2
 
-                print(f"Results of m: {dir_1} and init: {dir_2}")
+            print_message = f"Results of m: {dir_1} and init: {dir_2}"
 
-                give_external_eval(original_X, original_X, 50, 2.0, dir_path)
+            give_external_eval(original_X, original_X, 50, 2.0, dir_path, print_message = print_message)
