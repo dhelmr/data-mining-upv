@@ -8,7 +8,7 @@ Download [the data set from kaggle](https://www.kaggle.com/kazanova/sentiment140
 
 ## Usage
 
-## Pre-Processing
+### Pre-Processing
 
 The data pre processing consists of multiple steps: data splitting (data_splitting.py) data cleaning (data_cleaning.py).
 
@@ -25,7 +25,7 @@ Note that cleaning hugh amount of tweets takes some time. The progress is shown 
 data_cleaner.py resources/raw/tweets_train.csv -d resources/clean/tweets_train_clean.csv
 ```
 
-## Doc2Vec
+### Doc2Vec
 
 Starting the doc2vec training requires some paraemter given. The following shows and explains which ones can be set. Furthermore the finally used parameter setting is explained in the project report. 
 The scientific source for our setting is the paper from [Lau and Baldwin (2016)](https://arxiv.org/pdf/1607.05368.pdf).
@@ -50,7 +50,7 @@ To start the d2v model training, this would be a possible call to use (note that
 d2v_trainer.py -s resources/clean/tweets_train_clean.csv -dm 1 -d resources/models/model_d2v.model -e 100 -vs 200
 ```
 
-## Clustering
+### Clustering
 
 The k-means clustering is executed with the python file `run_clustering.py`. There are a lot of possible arguments:
 
@@ -106,9 +106,9 @@ The k-means algorithm by itself will be terminated if 20 iterations are reached 
 
 The clustering results will be saved to `resources/clustering` (specified with `--dest`). Each result is stored in a separate file like `k=2_m=2.0_init=1_1573230238.2595701.result`.
 
-## Evaluation
+### Evaluation
 
-## Generate textfiles with the tweets for each cluster
+### Generate textfiles with the tweets for each cluster
 
 With `cluster_to_tweets.py` it is possible to apply a clustering result on the original (raw) tweets. It generates a text file for each cluster containing the original tweets of the instances that are assigned to this cluster.
 
