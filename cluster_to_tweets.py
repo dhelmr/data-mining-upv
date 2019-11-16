@@ -25,7 +25,7 @@ def load_tweet(table, index):
     
 def write_to_file(destination, cluster_label, tweets):
     file_name = path.join(destination, str(cluster_label)+".txt")
-    text_file = open(file_name, "w")
+    text_file = open(file_name, "w", encoding="utf-8")
     for tweet in tweets:
         text_file.write(tweet+"\n")
     text_file.close()
