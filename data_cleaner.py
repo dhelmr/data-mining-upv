@@ -16,6 +16,7 @@ def clean_tweets(data, stopwords_stemming=False):
     This function prepares and cleans all tweets within the given data frame. Contractions handling, lowercase
     delete special signs, @s with username, https, word stemming, stopwords removal, ...
 
+    source: https://cs.stanford.edu/people/alecmgo/papers/TwitterDistantSupervision09.pdf
     source: https://towardsdatascience.com/another-twitter-sentiment-analysis-bb5b01ebad90
 
     :param data: pandas data frame containing raw Sentiment140 tweets
@@ -25,6 +26,7 @@ def clean_tweets(data, stopwords_stemming=False):
 
     tweets = []
     labels = []
+    originals = []
 
     print("INFO: Start cleaning tweets")
     data['label'].replace([4], 1, inplace=True)
@@ -38,6 +40,8 @@ def clean_tweets(data, stopwords_stemming=False):
         # apply different cleaning steps on each tweet
         tweet = data.text[i]
         label = data.label[i]
+        original = data.text[i]
+        
         tweet = tweet.lower()
         tweet = re.sub(r"@\S+", "", tweet)
         tweet = re.sub(r"http\S+", "", tweet)
@@ -61,10 +65,11 @@ def clean_tweets(data, stopwords_stemming=False):
 
         tweets.append(tweet)
         labels.append(label)
+        originals.append(original)
 
     # concat to data frame and drop empty entries
     print(f"INFO: {len(data)} of {len(data)} tweets have been processed.")
-    data = pd.DataFrame({'label': labels, 'text': tweets})
+    data = pd.DataFrame({'label': labels, 'text': tweets, 'original': originals})
     data_clean = drop_empty_entries(data)
 
     return data_clean
@@ -103,10 +108,10 @@ def main(src_path, dest_path):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Data Cleaner')
+    parser = argparse.ArgumentParser(description='DATA CLEANER')
     parser.add_argument('src_path', help='enter path to raw data')
     parser.add_argument('-tgt', '--dest_path', default="resources/clean/cleaned.csv",
-                        help='enter path where to save cleaned tweets')
+                        help='enter file path where to save cleaned tweets')
     args = parser.parse_args()
 
     main(args.src_path, args.dest_path)
