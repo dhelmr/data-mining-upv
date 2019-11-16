@@ -110,7 +110,7 @@ def main(src_path, dest_path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='DATA CLEANER')
     parser.add_argument('src_path', help='enter path to raw data')
-    parser.add_argument('-tgt', '--dest_path', default="resources/clean/cleaned.csv",
+    parser.add_argument('-d', '--dest_path', default="resources/clean/tweets_cleaned.csv",
                         help='enter file path where to save cleaned tweets')
     args = parser.parse_args()
 

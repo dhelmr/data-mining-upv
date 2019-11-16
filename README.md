@@ -10,7 +10,45 @@ Download [the data set from kaggle](https://www.kaggle.com/kazanova/sentiment140
 
 ## Pre-Processing
 
-TODO
+The data pre processing consists of multiple steps: data splitting (data_splitting.py) data cleaning (data_cleaning.py).
+
+To split the original data parameters like data source, and train/test destination files need to be given as well as the used fraction for the training data.
+
+```
+data_splitting.py -src resources/raw/Sentiment140.csv -tr resources/raw/tweets_train.csv -te resources/raw/tweets_test.csv -f 0.7
+```
+
+After splitting the data, the cleaning can be executed. You need to deploy a file path to data which should be cleaned and a target file path
+Note that cleaning hugh amount of tweets takes some time. The progress is shown in the terminal.
+
+```
+data_cleaner.py resources/raw/tweets_train.csv -d resources/clean/tweets_train_clean.csv
+```
+
+## Doc2Vec
+
+Starting the doc2vec training requires some paraemter given. The following shows and explains which ones can be set. Furthermore the finally used parameter setting is explained in the project report. 
+The scientific source for our setting is the paper from [Lau and Baldwin (2016)](https://arxiv.org/pdf/1607.05368.pdf).
+```
+usage: d2v_trainer.py [-h] [--src SRC] [--type DM] [-d DEST] [-e EPOCHS]
+                      [-vs VEC_SIZE]
+
+D2V TRAINER
+
+optional arguments:
+  -h, --help    show this help message and exit
+  --src SRC     enter source path of training data
+  --type DM     enter d2v model type (dm=0 -> DBOW, dm=1 -> DM
+  -d DEST       enter file path where to save d2v model
+  -e EPOCHS     enter wanted amount of training epochs
+  -vs VEC_SIZE  enter wanted vector size
+```
+
+To start the d2v model training, this would be a possible call to use (note that the training can take quite some time and be aware of memory errors during vocabulary creation):
+
+```
+d2v_trainer.py -s resources/clean/tweets_train_clean.csv -dm 1 -d resources/models/model_d2v.model -e 100 -vs 200
+```
 
 ## Clustering
 
@@ -103,4 +141,33 @@ Good morning! I have class today
 [763 more lines]
 ```
 
+### Testing new instances
+
+run_centroids.py
+
+Since the k-means clustering model is not trained with all data, we can apply it now on unseen data. 100.000 instances
+were separated for this. This tool assigns the 'new' instances to the previously found clusters. Furthermore, for
+each cluster a sample test-instance is compared with n instances from that cluster used for training. The results are
+saved into a text file for visual and manual examination.
+
+```
+usage: run_centroids.py [-h] [--src SRC] [--k_means MODEL] [-n SAMPLES]
+                        [-d DEST] [-s SAVE]
+
+TEST DATA PROCESSING
+
+optional arguments:
+  -h, --help       show this help message and exit
+  --src SRC        path to vectors file
+  --kmeans MODEL  path to k_means objects
+  -n SAMPLES       number of samples per clusters
+  -d DEST          file path for tweet comparison result file
+  -s SAVE          save resulting data frame option on/off
+```
+
+The following provides a sample command containing parameter to run the comparison of new tweet instances.
+```
+run_centroids.py --src resources/tweets_test_vecs600.vec --kmeans kmeans/models/k=2_m=2.0_init=1_1573230238.2595701.result -n 5 -d tweet_comparison.txt
+```
+TODO
 

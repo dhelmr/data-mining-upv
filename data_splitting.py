@@ -16,12 +16,12 @@ def main(src_path, path_train, path_test, frac):
     data_training = data_raw.sample(frac=frac, random_state=42)
     data_testing = data_raw.drop(data_training.index)
 
-    data_training = data_training.reset_index(drop=True, inplace=True)
-    data_training.to_csv(path_train)
+    data_training = data_training.reset_index(drop=True, inplace=False)
+    data_training.to_csv("resources/raw/test.csv")
     print(f"INFO: Training data saved to '{path_train}'\n"
           f"INFO: Training data shape: {data_training.shape}")
 
-    data_testing = data_testing.reset_index(drop=True, inplace=True)
+    data_testing = data_testing.reset_index(drop=True, inplace=False)
     data_testing.to_csv(path_test)
     print(f"INFO: Test data saved to '{path_test}'\n"
           f"INFO: Training data shape: {data_testing.shape}")

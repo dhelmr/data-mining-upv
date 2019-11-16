@@ -112,16 +112,19 @@ def main(src_path, dm, dest_path, epochs, vector_size):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='D2V TRAINER')
-    parser.add_argument('src_path', help='enter source path of training data')
-    parser.add_argument('-dm', '--type', default=1, type=int, help='enter d2v model type (0 -> DBOW, 1 -> DM')
-    parser.add_argument('-d', '--dest_path', default="resources/models/model_d2v_new.model",
-                        help='enter path where to save transformed txt data')
-    parser.add_argument('-e', '--epochs', default=10, type=int, help='enter wanted amount of training epochs')
-    parser.add_argument('-vs', '--vec_size', default=200, type=int, help='enter wanted vector size')
-
+    parser.add_argument('--src', dest='src',
+                        help='enter source path of training data')
+    parser.add_argument('--type', dest='dm', default=1, type=int,
+                        help='enter d2v model type (dm=0 -> DBOW, dm=1 -> DM')
+    parser.add_argument('-d', dest='dest', default="resources/models/model_d2v_new.model",
+                        help='enter file path where to save d2v model')
+    parser.add_argument('-e', dest='epochs', default=10, type=int,
+                        help='enter wanted amount of training epochs')
+    parser.add_argument('-vs', dest='vec_size', default=200, type=int,
+                        help='enter wanted vector size')
     args = parser.parse_args()
 
-    main(args.src_path, args.type, args.dest_path, args.epochs, args.vec_size)
+    main(args.src, args.type, args.dest, args.epochs, args.vec_size)
 
 
 
