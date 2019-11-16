@@ -5,6 +5,7 @@ Applying clustering on unseen tweets and add corresponding cluster (nearest cent
 
 import pickle
 import argparse
+import time
 import pandas as pd
 from kmeans.k_means import from_file
 
@@ -36,9 +37,9 @@ def tweet_comparison(df, k_means, tweets_txt, n_samples, result_file):
 
             # getting original and cleaned text to test data sample
             print(f"### TWEET FROM CLUSTER {cluster}) ###\n"
-                  f"ORIGINAL:   {tweets_txt['original'][sample.index]}\n"
-                  f"CLEANED:    {tweets_txt['text'][sample.index]}\n"
-                  f"# Samples from corresponding cluster:", file=file)
+                  f"ORIGINAL:   {tweets_txt['original'][sample.index].item()}\n"
+                  f"CLEANED:    {tweets_txt['text'][sample.index].item()}\n"
+                  f"# SAMPLES FROM CORRESPONDING CLUSTER (TRAINING DATA):", file=file)
 
             # get corresponding instances / indices from cluster (out of training data)
             instance_indexes = list(k_means.instances_by_cluster[cluster])
@@ -80,7 +81,7 @@ def main(filename, k_means_path, n_samples, result_file, save):
 
     # load necessary things
     print("INFO: Reading necessary data and model")
-    tweets_txt = pd.read_csv("resources/clean/cleaned.csv")
+    tweets_txt = pd.read_csv("resources/clean/cleaned.csv", index_col=0)
     data_prepared = pickle.load(open(filename, "rb"))
     vectors = data_prepared["vectors"]
 
