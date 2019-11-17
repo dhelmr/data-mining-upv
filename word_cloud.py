@@ -7,7 +7,7 @@ import os
 import re
 import argparse
 import matplotlib.pyplot as plt
-from wordcloud import WordCloud
+from wordcloud import WordCloud, STOPWORDS
 
 
 def plotting(word_cloud):
@@ -25,10 +25,14 @@ def plotting(word_cloud):
 def main(src_path, plot, save, dest):
     print("### GENERATING WORD CLOUDS ###")
 
+    # set stopwords
+    stopwords = set(STOPWORDS)
+    stopwords.update(['amp', 'quot', 'quote', 'world'])
+
     for filename in glob.glob(f"{src_path}/*.txt"):
 
         wordcloud = WordCloud(max_words=1000, background_color='white', scale=3, relative_scaling=0.5,
-                              width=500, height=400, random_state=42)
+                              width=500, height=400, random_state=42, stopwords=stopwords)
 
         file = open(filename, "r")
         wordcloud.generate(file.read())
