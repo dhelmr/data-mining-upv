@@ -171,3 +171,14 @@ run_centroids.py --src resources/tweets_test_vecs600.vec --kmeans kmeans/models/
 ```
 TODO
 
+### HTML visualization
+
+With `make-html.py` it is possible to serve a little HTML presentation that contains the generated wordclouds and original tweet files that were created in the steps above.
+
+Example:
+
+```
+python make-html.py --texts resources/kmeans_tweets --wordclouds resources/kmeans_tweets/wordclouds --port 8101
+```
+
+Then, open a webbrowser and go to `localhost:8101`.
