@@ -26,10 +26,11 @@ def tweet_comparison(df, k_means, tweets_txt, n_samples, result_file):
     :param result_file: result file destination
     :return: none
     """
+    print("INFO: Tweet comparison started")
     # Get number of clusters
     clusters = df.cluster.unique()
 
-    with open(result_file, 'w') as file:
+    with open(result_file, 'w', encoding="utf-8") as file:
         # iterating over all clusters found
         for cluster in clusters:
             # get sample of test data which was assigned to the given cluster
@@ -48,6 +49,7 @@ def tweet_comparison(df, k_means, tweets_txt, n_samples, result_file):
             for index in instance_indexes[:n_samples]:
                 print(f"ORIGINAL:   {tweets_txt['original'][index]}\n"
                       f"CLEANED:    {tweets_txt['text'][index]}", file=file)
+            print(f"INFO: Cluster {cluster} done")
             print("\n", file=file)
 
     print(f"INFO: Comparison saved to file '{result_file}'")
@@ -81,7 +83,7 @@ def main(src_path, vec_file, k_means_path, n_samples, result_file, save):
 
     # load necessary things
     print("INFO: Reading necessary data and model")
-    tweets_txt = pickle.load(open(src_path, 'rb'))
+    tweets_txt = pickle.load(open(src_path, 'rb'), encoding="utf-8")
     data_prepared = pickle.load(open(vec_file, "rb"))
     vectors = data_prepared["vectors"]
 
