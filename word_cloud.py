@@ -34,7 +34,7 @@ def main(src_path, plot, save, dest):
         wordcloud = WordCloud(max_words=1000, background_color='white', scale=3, relative_scaling=0.5,
                               width=500, height=400, random_state=42, stopwords=stopwords)
 
-        file = open(filename, "r")
+        file = open(filename, "r", encoding='utf8')
         wordcloud.generate(file.read())
 
         try:
