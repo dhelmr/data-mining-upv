@@ -73,6 +73,13 @@ python d2v_trainer.py --src resources/clean/tweets_train_clean_original.pkl --ty
 el -e 100 -vs 200
 ```
 
+After the d2v models is created and trained, it can be applied on new data to infer vectors from the given texts. This
+is done by the file `d2v_apply.py`. To run it, the following command can be used:
+
+```
+python d2v_apply.py -m resources/models/model_d2v_dbow_600epochs.model -src resources/clean/tweets_test_clean_original.pkl -d resources/tweets_test_vecs.vec
+```
+
 ### Clustering
 
 The k-means clustering is executed with the python file `run_clustering.py`. There are a lot of possible arguments:
