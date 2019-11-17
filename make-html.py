@@ -235,7 +235,7 @@ def main(wordcloud_dir, text_dir, port):
         active = False
         if i == 0:
             active = True
-        f = f"{i}.txt.png"
+        f = f"wordcloud_cluster{i}.png"
         copy(join(wordcloud_dir, f), tmp_dir)
         slideshow_html += make_slideshow_element(i, len(image_files), f, "", isActive=active)
         textfile = f"{i}.txt"
