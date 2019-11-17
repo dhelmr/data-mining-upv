@@ -5,3 +5,5 @@ gensim
 scikit-learn
 numpy
 pandas
+numpy
+numba
