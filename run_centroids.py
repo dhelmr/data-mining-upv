@@ -111,16 +111,16 @@ def main(filename, k_means_path, n_samples, result_file, save):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='TEST DATA PROCESSING')
     # TODO: final project structure needs to be respected - file paths!
-    parser.add_argument("-f", "--file", dest="file", default="resources/tweets_test_vecs600.vec",
+    parser.add_argument("-f", dest="file", default="resources/tweets_test_vecs600.vec",
                         help="path to vectors file")
     # TODO: here needs to be our 'optimal' clustering model be referenced
-    parser.add_argument("-k", "--k_means", dest="kmeans", default="kmeans/models/k=2_m=2.0_init=1_1573230238.2595701.result",
+    parser.add_argument("-k", dest="kmeans", default="kmeans/models/k=2_m=2.0_init=1_1573230238.2595701.result",
                         help="path to k_means objects")
-    parser.add_argument("-n", "--samples", dest="samples", default=5,
+    parser.add_argument("-n", dest="samples", default=5,
                         help="number of samples per clusters")
-    parser.add_argument("-d", "--dest", dest="dest", default="tweet_comparison.txt",
+    parser.add_argument("-d", dest="dest", default="tweet_comparison.txt",
                         help="file path for tweet comparison result file")
-    parser.add_argument("-s", "--save", dest="save", default=False, type=bool,
+    parser.add_argument("-s", dest="save", default=False, type=bool,
                         help="save resulting data frame option on/off")
     args = parser.parse_args()
 
