@@ -22,10 +22,10 @@ def plotting(word_cloud):
     plt.show()
 
 
-def main(plot, save, dest):
+def main(src_path, plot, save, dest):
     print("### GENERATING WORD CLOUDS ###")
 
-    for filename in glob.glob("resources/kmeans_tweets/*.txt"):
+    for filename in glob.glob(f"{src_path}/*.txt"):
 
         wordcloud = WordCloud(max_words=1000, background_color='white', scale=3, relative_scaling=0.5,
                               width=500, height=400, random_state=42)
@@ -40,7 +40,7 @@ def main(plot, save, dest):
 
             # saving word cloud to directory if option is chosen
             if save is True:
-                path = "%s/wordcloud_%s.png" % (dest, re.search('\d+', os.path.basename(filename))[0])
+                path = "%swordcloud_cluster%s.png" % (dest, re.search('\d+', os.path.basename(filename))[0])
                 wordcloud.to_file(path)
                 print(f"INFO: World cloud saved to {path}")
         except Exception as e:
@@ -51,13 +51,14 @@ def main(plot, save, dest):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run k-means clustering')
-    # TODO: Set project structure / file paths
-    parser.add_argument("-p", "--plot", dest="plot", default=False, type=bool,
-                        help="Plot word cloud on/off")
-    parser.add_argument("-s", "--save", dest="save", default=False, type=bool,
-                        help="Save word cloud on/off")
-    parser.add_argument("-d", "--dest", dest="dest", default=".",
-                        help="Destination directory for saving word clouds")
+    parser.add_argument("-src", dest="path", default="resources/kmeans_tweets/",
+                        help="file path to txt files containing cluster content")
+    parser.add_argument("-p", dest="plot", default=False, type=bool,
+                        help="plot word cloud on/off")
+    parser.add_argument("-s", dest="save", default=True, type=bool,
+                        help="save word cloud on/off")
+    parser.add_argument("-d", dest="dest", default="resources/kmeans_tweets/wordclouds/",
+                        help="destination directory for saving word clouds")
     args = parser.parse_args()
 
-    main(args.plot, args.save, args.dest)
+    main(args.path, args.plot, args.save, args.dest)
