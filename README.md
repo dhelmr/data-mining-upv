@@ -31,7 +31,7 @@ There are also some additional steps that follow the evaluation, and can be used
 
 ### Pre-Processing
 
-The data pre processing consists of multiple steps: data splitting (data_splitting.py) data cleaning (data_cleaning.py).
+The data pre processing consists of multiple steps: data splitting (data_splitting.py) and data cleaning (data_cleaning.py).
 
 To split the original data parameters like data source, and train/test destination files need to be given as well as the used fraction for the training data.
 
@@ -39,14 +39,13 @@ To split the original data parameters like data source, and train/test destinati
 python data_splitting.py -src resources/raw/Sentiment140.csv -tr resources/raw/tweets_train.csv -te resources/raw/tweets_test.csv -f 0.7
 ```
 
-After splitting the data, the cleaning can be executed. You need to deploy a file path to data which should be cleaned and a target file path
-Note that cleaning hugh amount of tweets takes some time. The progress is shown in the terminal.
+After splitting the data, the cleaning can be executed. You need to deploy a file path to data which should be cleaned and a target file path. Note that cleaning a hugh amount of tweets takes some time. The progress is shown in the terminal.
 
 ```
 python data_cleaner.py --src resources/raw/tweets_train.csv -d resources/clean/tweets_train_clean_original.pkl
 ```
 
-And for the test split:
+And for the test split (which will later be used for the clustering):
 
 
 ```
@@ -193,12 +192,12 @@ With `cluster_to_tweets.py` it is possible to apply a clustering result on the o
 You will need:
 
 * A clustering result, like `k=50_m=2.0_init=1_1573629301.038218.result`.
-* The mapping of the cleaned data instances to the original tweets, stored in a pickle file, like `resources/tweets_test_clean_original.pkl`. This file is produced in the preprocessing step.
+* The mapping of the cleaned data instances to the original tweets, stored in a pickle file, like `resources/clean/tweets_test_clean_original.pkl`. This file is produced in the pre-processing step.
 
 To generate the text files with the original tweets:
 
 ```
-python cluster_to_tweets.py --clean resources/tweets_test_clean_original.pkl --kmeans k=50_m=2.0_init=1_1573629301.038218.result --dest resources/kmeans_tweets/
+python cluster_to_tweets.py --clean resources/clean/tweets_test_clean_original.pkl --kmeans k=50_m=2.0_init=1_1573629301.038218.result --dest resources/kmeans_tweets/
 ```
 
 This fill the directory `resources/kmeans_tweets/` with 50 files (one for each cluster). Example content of `resources/kmeans_tweets/20.txt`:
@@ -219,7 +218,7 @@ Good morning! I have class today
 [763 more lines]
 ```
 
-### Testing new instances
+### Introducing new instances
 
 run_centroids.py
 
