@@ -241,8 +241,9 @@ optional arguments:
 ```
 
 The following provides a sample command containing parameter to run the comparison of new tweet instances.
+
 ```
-python run_centroids.py --src resources/tweets_test_vecs600.vec --kmeans kmeans/models/k=2_m=2.0_init=1_1573230238.2595701.result -n 5 -d tweet_comparison.txt
+python run_centroids.py --src resources/clean/tweets_test_clean_original.pkl -v resources/tweets_test_vecs600.vec
 ```
 
 ### Visualize the cluster content using word clouds

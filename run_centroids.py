@@ -36,7 +36,7 @@ def tweet_comparison(df, k_means, tweets_txt, n_samples, result_file):
             sample = df[df.cluster == cluster].sample(1)
 
             # getting original and cleaned text to test data sample
-            print(f"### TWEET FROM CLUSTER {cluster}) ###\n"
+            print(f"### TWEET FROM CLUSTER {cluster} ###\n"
                   f"ORIGINAL:   {tweets_txt['original'][sample.index].item()}\n"
                   f"CLEANED:    {tweets_txt['text'][sample.index].item()}\n"
                   f"# SAMPLES FROM CORRESPONDING CLUSTER (TRAINING DATA):", file=file)
@@ -76,13 +76,16 @@ def get_clusters(k_means, vectors):
     return result
 
 
-def main(filename, k_means_path, n_samples, result_file, save):
+def main(src_path, vec_file, k_means_path, n_samples, result_file, save):
     print("### TEST DATA PROCESSING ####")
 
     # load necessary things
     print("INFO: Reading necessary data and model")
-    tweets_txt = pd.read_csv("resources/clean/cleaned.csv", index_col=0)
-    data_prepared = pickle.load(open(filename, "rb"))
+    # tweets_txt = pd.read_csv("resources/clean/cleaned.csv", index_col=0)
+
+    tweets_txt = pickle.load(open(src_path, 'rb'))
+
+    data_prepared = pickle.load(open(vec_file, "rb"))
     vectors = data_prepared["vectors"]
 
     # load and prepare k_means model
@@ -110,9 +113,11 @@ def main(filename, k_means_path, n_samples, result_file, save):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='TEST DATA PROCESSING')
-    parser.add_argument("-f", dest="file", default="resources/tweets_test_vecs600.vec",
+    parser.add_argument("--src", dest="src", default="resources/clean/tweets_test_clean_original.pkl",
+                        help="path to file containing test tweets original and cleaned")
+    parser.add_argument("-v", dest="vecs", default="resources/tweets_test_vecs600.vec",
                         help="path to vectors file")
-    parser.add_argument("-k", dest="kmeans", default="kmeans/models/k=2_m=2.0_init=1_1573230238.2595701.result",
+    parser.add_argument("-k", dest="kmeans", default="kmeans/models/k=75_m=2.0_init=1_1573665872.8169765.result",
                         help="path to k_means objects")
     parser.add_argument("-n", dest="samples", default=5, type=int,
                         help="number of samples per clusters")
@@ -122,4 +127,4 @@ if __name__ == '__main__':
                         help="save resulting data frame option on/off")
     args = parser.parse_args()
 
-    main(args.file, args.kmeans, args.samples, args.dest, args.save)
+    main(args.src, args.vecs, args.kmeans, args.samples, args.dest, args.save)
