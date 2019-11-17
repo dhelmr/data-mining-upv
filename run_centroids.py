@@ -114,7 +114,7 @@ if __name__ == '__main__':
                         help="path to vectors file")
     parser.add_argument("-k", dest="kmeans", default="kmeans/models/k=2_m=2.0_init=1_1573230238.2595701.result",
                         help="path to k_means objects")
-    parser.add_argument("-n", dest="samples", default=5,
+    parser.add_argument("-n", dest="samples", default=5, type=int,
                         help="number of samples per clusters")
     parser.add_argument("-d", dest="dest", default="tweet_comparison.txt",
                         help="file path for tweet comparison result file")
