@@ -108,7 +108,28 @@ The clustering results will be saved to `resources/clustering` (specified with `
 
 ### Evaluation
 
-### Generate textfiles with the tweets for each cluster
+The evaluation runs in one session over all trained clustering models from the given source path. Concrete evaluation indexes are printed
+in the console while figures of the class vs cluster validation are saved in the respective directories of the models.
+```
+usage: run_evaluation.py  [--src SRC]
+
+CLUSTER VALIDATION
+
+optional arguments:
+  -h, --help    show this help message and exit
+  --src SRC     enter source path of trained clustering models
+
+```
+
+To start the evaluation process:
+
+```
+python run_evaluation.py --src resources/results/tweets_test_vecs600.vec
+
+```
+
+
+## Generate textfiles with the tweets for each cluster
 
 With `cluster_to_tweets.py` it is possible to apply a clustering result on the original (raw) tweets. It generates a text file for each cluster containing the original tweets of the instances that are assigned to this cluster.
 

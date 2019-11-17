@@ -24,9 +24,9 @@ k_means_obj = pickle.load(open("resources/small/clustering/m_2.0/k_13_m_2.0_1572
 give_tendency_eval(k_means_obj)
 best_run = table_class_vs_cluster(original_X, k_means_obj)
 
-"""
-
 #external_eval_all_files("resources/small/clustering")
+
+"""
 
 ###### Complete run with plots over all directories ########
 
@@ -39,9 +39,9 @@ for path in dirs_to_test:
 
 ###### Possible Check for single clustering result ########
 
-k_means_obj = pickle.load(open("resources/results/10epoch/m1/init_1/k=14_m=1.0_init=1_1573198390.9285932.result","rb"))
+k_means_obj = pickle.load(open("resources/results/tweets_test_vecs600.vec/m_2/init_1/k=50_m=2.0_init=1_1573629301.038218.result","rb"))
 original_X = pd.read_csv("resources/small/clean.csv")
-#give_tendency_eval(k_means_obj)
+give_tendency_eval()
 best_run = table_class_vs_cluster(original_X, k_means_obj)
 
 
