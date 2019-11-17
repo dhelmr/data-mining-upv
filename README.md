@@ -9,6 +9,8 @@ Download [the data set from kaggle](https://www.kaggle.com/kazanova/sentiment140
 ## Usage
 
 
+[Dropbox-Link](https://www.dropbox.com/sh/farrz7t1ri3p58e/AACygkgYPPqqT9hsz4AVjmfoa?dl=0)
+
 ### Pre-Processing
 
 The data pre processing consists of multiple steps: data splitting (data_splitting.py) data cleaning (data_cleaning.py).
@@ -30,6 +32,7 @@ python data_cleaner.py resources/raw/tweets_train.csv -d resources/clean/tweets_
 
 Starting the doc2vec training requires some paraemter given. The following shows and explains which ones can be set. Furthermore the finally used parameter setting is explained in the project report. 
 The scientific source for our setting is the paper from [Lau and Baldwin (2016)](https://arxiv.org/pdf/1607.05368.pdf).
+
 ```
 usage: d2v_trainer.py [-h] [--src SRC] [--type DM] [-d DEST] [-e EPOCHS]
                       [-vs VEC_SIZE]
@@ -48,7 +51,8 @@ optional arguments:
 To start the d2v model training, this would be a possible call to use (note that the training can take quite some time and be aware of memory errors during vocabulary creation):
 
 ```
-python d2v_trainer.py -s resources/clean/tweets_train_clean.csv -dm 1 -d resources/models/model_d2v.model -e 100 -vs 200
+python d2v_trainer.py --src resources/clean/tweets_train_clean_original.pkl --type 1 -d resources/models/model_d2v.mod
+el -e 100 -vs 200
 ```
 
 ### Clustering
