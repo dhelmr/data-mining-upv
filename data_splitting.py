@@ -17,7 +17,7 @@ def main(src_path, path_train, path_test, frac):
     data_testing = data_raw.drop(data_training.index)
 
     data_training = data_training.reset_index(drop=True, inplace=False)
-    data_training.to_csv("resources/raw/test.csv")
+    data_training.to_csv(path_train)
     print(f"INFO: Training data saved to '{path_train}'\n"
           f"INFO: Training data shape: {data_training.shape}")
 
