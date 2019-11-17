@@ -99,7 +99,7 @@ optional arguments:
 For the exact way of functioning of the algorithm, and the meaning of the parameters, please have a look at the project report. To run the clustering multiple times for different k and m, this would be a possible call:
 
 ```
-python run_clustering.py --k-start 10 -k 15 -m 1.5 2 2.5 --src resources/vecs.vec --dest resources/clustering --max_iter 20 --n_iter 2 --init_strategy 1 --threshold 0.01 --auto_increment True
+python run_clustering.py --k-start 10 -k 15 -m 1.5 2 2.5 --src resources/tweets_test_vecs600.vec --dest resources/clustering/ --max_iter 20 --n_iter 2 --init_strategy 1 --threshold 0.01 --auto_increment True
 ```
 
 It will iterate from k=10 until k=15 and use successively m=1.5, m=2 and m=2.5 and will initialize the centroids randomly. For each configuration of k and m, it will run the algorithm twice and choose the best result afterwards.
