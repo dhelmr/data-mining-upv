@@ -3,6 +3,7 @@ Cleans a given data frame
 """
 
 import re
+import pickle
 import argparse
 import pandas as pd
 from nltk.tokenize import word_tokenize
@@ -101,7 +102,7 @@ def main(src_path, dest_path):
     print(f"INFO: Read data from path: {src_path}")
     data_raw = pd.read_csv(src_path, encoding="ISO-8859–1")
     data_clean = clean_tweets(data_raw, stopwords_stemming=True)
-    data_clean.to_csv(dest_path, encoding="utf-8")
+    pickle.dump(data_clean, open(dest_path, "wb"))
     print(f"INFO: Cleaned tweets saved to path: {dest_path}")
 
     print("### ENDED DATA CLEANING ###")
@@ -109,9 +110,10 @@ def main(src_path, dest_path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='DATA CLEANER')
-    parser.add_argument('src_path', help='enter path to raw data')
-    parser.add_argument('-d', '--dest_path', default="resources/clean/tweets_cleaned.csv",
+    parser.add_argument('--src', dest='src', default='resources/raw/tweets_train.csv',
+                        help='enter path to raw data')
+    parser.add_argument('-d', dest='dest', default="resources/clean/tweets_train_clean_original.pkl",
                         help='enter file path where to save cleaned tweets')
     args = parser.parse_args()
 
-    main(args.src_path, args.dest_path)
+    main(args.src, args.dest)
