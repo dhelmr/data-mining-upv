@@ -8,6 +8,7 @@ Download [the data set from kaggle](https://www.kaggle.com/kazanova/sentiment140
 
 ## Usage
 
+
 ### Pre-Processing
 
 The data pre processing consists of multiple steps: data splitting (data_splitting.py) data cleaning (data_cleaning.py).
@@ -15,14 +16,14 @@ The data pre processing consists of multiple steps: data splitting (data_splitti
 To split the original data parameters like data source, and train/test destination files need to be given as well as the used fraction for the training data.
 
 ```
-data_splitting.py -src resources/raw/Sentiment140.csv -tr resources/raw/tweets_train.csv -te resources/raw/tweets_test.csv -f 0.7
+python data_splitting.py -src resources/raw/Sentiment140.csv -tr resources/raw/tweets_train.csv -te resources/raw/tweets_test.csv -f 0.7
 ```
 
 After splitting the data, the cleaning can be executed. You need to deploy a file path to data which should be cleaned and a target file path
 Note that cleaning hugh amount of tweets takes some time. The progress is shown in the terminal.
 
 ```
-data_cleaner.py resources/raw/tweets_train.csv -d resources/clean/tweets_train_clean.csv
+python data_cleaner.py resources/raw/tweets_train.csv -d resources/clean/tweets_train_clean.csv
 ```
 
 ### Doc2Vec
@@ -47,7 +48,7 @@ optional arguments:
 To start the d2v model training, this would be a possible call to use (note that the training can take quite some time and be aware of memory errors during vocabulary creation):
 
 ```
-d2v_trainer.py -s resources/clean/tweets_train_clean.csv -dm 1 -d resources/models/model_d2v.model -e 100 -vs 200
+python d2v_trainer.py -s resources/clean/tweets_train_clean.csv -dm 1 -d resources/models/model_d2v.model -e 100 -vs 200
 ```
 
 ### Clustering
@@ -188,9 +189,18 @@ optional arguments:
 
 The following provides a sample command containing parameter to run the comparison of new tweet instances.
 ```
-run_centroids.py --src resources/tweets_test_vecs600.vec --kmeans kmeans/models/k=2_m=2.0_init=1_1573230238.2595701.result -n 5 -d tweet_comparison.txt
+python run_centroids.py --src resources/tweets_test_vecs600.vec --kmeans kmeans/models/k=2_m=2.0_init=1_1573230238.2595701.result -n 5 -d tweet_comparison.txt
 ```
-TODO
+
+### Visualize the cluster content using word clouds
+
+Furthermore it is possible to generate word clouds for all clusters found by the applied k-means algorithm. This
+requires the .txt files created by `cluster_to_tweets.py`. The world word clouds are saved to `resources/kmeans_tweets/wordclouds/`
+by default. Run the following command to start generating word clouds:
+
+```
+python word_cloud.py -src resources/kmeans_tweets/ -d resources/kmeans_tweets/wordclouds/
+```
 
 ### HTML visualization
 
