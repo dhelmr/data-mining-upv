@@ -162,7 +162,7 @@ optional arguments:
 
 ```
 
-Note that for this step, you need to specify a directory with the following structure:
+Note that for this step, you need to specify a directory with the following structure (the values for m and the init strategies depend on the cluster runs you executed):
 ```
 resources/clustering_results
 ├── m_15

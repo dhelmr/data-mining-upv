@@ -36,13 +36,13 @@ def read_src_data(path):
 
 if __name__ == '__main__':
     
-    parser = argparse.ArgumentParser(description='Run k-means clustering')
+    parser = argparse.ArgumentParser(description='Export original tweets to a directory, grouped into files by a clustering result')
     parser.add_argument(
         '--kmeans', dest='kmeans', help='path to the kmeans result file', required=True)
     parser.add_argument('--dest', dest='dest', default="resources/kmeans_tweets/",
                         help='folder the tweets will be saved')
     parser.add_argument('--clean', dest='clean', default="resources/tweets_test_clean_original.pkl",
-                    help='csv file with the mapping of original to cleaned data')
+                    help='pkl file with the mapping of original to cleaned data')
     args = parser.parse_args()
     
     main(args.dest, args.clean, args.kmeans)
