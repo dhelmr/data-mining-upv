@@ -81,10 +81,7 @@ def main(src_path, vec_file, k_means_path, n_samples, result_file, save):
 
     # load necessary things
     print("INFO: Reading necessary data and model")
-    # tweets_txt = pd.read_csv("resources/clean/cleaned.csv", index_col=0)
-
     tweets_txt = pickle.load(open(src_path, 'rb'))
-
     data_prepared = pickle.load(open(vec_file, "rb"))
     vectors = data_prepared["vectors"]
 
