@@ -1,3 +1,5 @@
+matplotlib
+wordcloud
 nltk
 gensim
 scikit-learn
