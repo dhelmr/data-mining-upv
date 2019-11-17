@@ -23,13 +23,11 @@ After downloading the data set, there are a couple of steps that need to be run:
 3. Cluster the instances with k-means.
 4. Evaluate the clustering results
 
-Each step yields one or more output files, so that they can be run independently from each other. As some of the steps will take much time, you can download example results that we provide [here](). TODO add dropbox link
+Each step yields one or more output files, so that they can be run independently from each other. As some of the steps will take much time, you can download example results that we provide [here](https://www.dropbox.com/sh/farrz7t1ri3p58e/AACygkgYPPqqT9hsz4AVjmfoa?dl=0).
 
 It is also possible to use a smaller dataset, which can be found in `resources/small`. It only contains the first 5000 rows of the original data set. It can be used for quickly testing the clustering and evaluation, but it probably won't result in an usable doc2vec model.
 
 There are also some additional steps that follow the evaluation, and can be used for visualizing the cluster results or introducing new instances. The following sections give a basic overview of how to execute each step.
-
-[Dropbox-Link](https://www.dropbox.com/sh/farrz7t1ri3p58e/AACygkgYPPqqT9hsz4AVjmfoa?dl=0)
 
 ### Pre-Processing
 
@@ -45,7 +43,7 @@ After splitting the data, the cleaning can be executed. You need to deploy a fil
 Note that cleaning hugh amount of tweets takes some time. The progress is shown in the terminal.
 
 ```
-python data_cleaner.py resources/raw/tweets_train.csv -d resources/clean/tweets_train_clean.csv
+python data_cleaner.py resources/raw/tweets_train.csv -d resources/clean/tweets_train_clean_original.pkl
 ```
 
 ### Doc2Vec
@@ -156,7 +154,7 @@ To start the evaluation process:
 python run_evaluation.py --src resources/results/tweets_test_vecs600.vec
 ```
 
-## Generate textfiles with the tweets for each cluster
+## Generate text files with the tweets for each cluster
 
 With `cluster_to_tweets.py` it is possible to apply a clustering result on the original (raw) tweets. It generates a text file for each cluster containing the original tweets of the instances that are assigned to this cluster.
 
