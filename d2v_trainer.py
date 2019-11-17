@@ -4,6 +4,7 @@ Document2Vector model training
 
 import argparse
 import pandas as pd
+import pickle
 import multiprocessing
 from sklearn import utils
 from gensim.models import Doc2Vec
@@ -95,7 +96,7 @@ def main(src_path, dm, dest_path, epochs, vector_size):
     print("### DOC2VEC TRAINING ###")
 
     print(f"INFO: Read training data from {src_path}")
-    data = pd.read_csv(src_path)
+    data = pickle.load(open(src_path, "rb"))
     tweets_training = data.text
     tweets_labeled = labelling_tweets(tweets_training)
 
@@ -112,7 +113,7 @@ def main(src_path, dm, dest_path, epochs, vector_size):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='D2V TRAINER')
-    parser.add_argument('--src', dest='src',
+    parser.add_argument('--src', dest='src', default='resources/clean/tweets_train_clean_original.pkl',
                         help='enter source path of training data')
     parser.add_argument('--type', dest='dm', default=1, type=int,
                         help='enter d2v model type (dm=0 -> DBOW, dm=1 -> DM')
@@ -124,7 +125,4 @@ if __name__ == '__main__':
                         help='enter wanted vector size')
     args = parser.parse_args()
 
-    main(args.src, args.type, args.dest, args.epochs, args.vec_size)
-
-
-
+    main(args.src, args.dm, args.dest, args.epochs, args.vec_size)
