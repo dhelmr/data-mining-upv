@@ -16,6 +16,18 @@ Download [the data set from kaggle](https://www.kaggle.com/kazanova/sentiment140
 
 ## Usage
 
+After downloading the data set, there are a couple of steps that need to be run:
+
+1. Pre-Process the data
+2. Create the Doc2Vec model
+3. Cluster the instances with k-means.
+4. Evaluate the clustering results
+
+Each step yields one or more output files, so that they can be run independently from each other. As some of the steps will take much time, you can download example results that we provide [here](). TODO add dropbox link
+
+It is also possible to use a smaller dataset, which can be found in `resources/small`. It only contains the first 5000 rows of the original data set. It can be used for quickly testing the clustering and evaluation, but it probably won't result in an usable doc2vec model.
+
+There are also some additional steps that follow the evaluation, and can be used for visualizing the cluster results or introducing new instances. The following sections give a basic overview of how to execute each step.
 
 ### Pre-Processing
 
@@ -65,13 +77,14 @@ The k-means clustering is executed with the python file `run_clustering.py`. The
 
 ```
 % python run_clustering.py --help
-usage: run_clustering.py [-h] [--src SRC] [--dest DEST] [-k K_END]
+sage: run_clustering.py [-h] [--src SRC] [--dest DEST] [-k K_END]
                          [--k-start K_START] [-m M_LIST [M_LIST ...]]
                          [--n_iter ITER] [--max_iter MAX_ITER]
                          [--threshold THRESHOLD] [--verbose VERBOSE]
                          [--auto_increment AUTO_INC]
                          [--init_strategy INIT_STRATEGY]
                          [--exclude_last_n EXCLUDE_LAST_N]
+                         [--double_k_result DOUBLE_K_RESULT]
 
 Run k-means clustering
 
@@ -95,13 +108,16 @@ optional arguments:
                         iteration is less than this threshold value.
   --verbose VERBOSE     Verbose output on/off
   --auto_increment AUTO_INC
-                        Automatically increment k from k until the value
-                        specified with -k is reached
+                        Automatically increment k from --k-start until the
+                        value specified with -k is reached
   --init_strategy INIT_STRATEGY
-                        Init Strategy, one of 1=RANDOM, 2=SPACE_DIVISION,
-                        3=DOUBLE_K_FIRST
+                        Init Strategy, one of 1=RANDOM, 3=DOUBLE_K_FIRST
   --exclude_last_n EXCLUDE_LAST_N
                         Excludes the last n instances from the clustering
+  --double_k_result DOUBLE_K_RESULT
+                        if init_strategy=3 is set, you can specify the
+                        double_k result here, so that k-means don't have to be
+                        run twice
 ```
 
 For the exact way of functioning of the algorithm, and the meaning of the parameters, please have a look at the project report. To run the clustering multiple times for different k and m, this would be a possible call:
@@ -134,9 +150,7 @@ To start the evaluation process:
 
 ```
 python run_evaluation.py --src resources/results/tweets_test_vecs600.vec
-
 ```
-
 
 ## Generate textfiles with the tweets for each cluster
 
