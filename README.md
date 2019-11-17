@@ -25,7 +25,7 @@ After downloading the data set, there are a couple of steps that need to be run:
 
 Each step yields one or more output files, so that they can be run independently from each other. As some of the steps will take much time, you can download example results that we provide [here](https://www.dropbox.com/sh/farrz7t1ri3p58e/AACygkgYPPqqT9hsz4AVjmfoa?dl=0).
 
-It is also possible to use a smaller dataset, which can be found in `resources/small`. It only contains the first 5000 rows of the original data set. It can be used for quickly testing the clustering and evaluation, but it probably won't result in an usable doc2vec model.
+It is also possible to use a smaller dataset, which can be found in `resources/small`. It only contains the first 1000 rows of the original data set. It can be used for quickly testing the clustering and evaluation, but it probably won't result in an usable doc2vec model.
 
 There are also some additional steps that follow the evaluation, and can be used for visualizing the cluster results or introducing new instances. The following sections give a basic overview of how to execute each step.
 
@@ -43,7 +43,14 @@ After splitting the data, the cleaning can be executed. You need to deploy a fil
 Note that cleaning hugh amount of tweets takes some time. The progress is shown in the terminal.
 
 ```
-python data_cleaner.py resources/raw/tweets_train.csv -d resources/clean/tweets_train_clean_original.pkl
+python data_cleaner.py --src resources/raw/tweets_train.csv -d resources/clean/tweets_train_clean_original.pkl
+```
+
+And for the test split:
+
+
+```
+python data_cleaner.py --src resources/raw/tweets_test.csv -d resources/clean/tweets_test_clean_original.pkl
 ```
 
 ### Doc2Vec
@@ -148,13 +155,28 @@ optional arguments:
 
 ```
 
+Note that for this step, you need to specify a directory with the following structure:
+```
+resources/clustering_results
+├── m_15
+│   └── init_1
+        |   k=2_m=15.0_init=1_1573226907.528137.result
+│       └── k=3_m=15.0_init=1_1573229907.912137.result
+└── m_2
+    ├── init_1
+    │   └── k=2_m=2.0_init=1_1573226908.124172.result
+    └── init_3
+        └── k=2_m=2.0_init=1_1573226908.124172.result
+```
+The k-means results from the last step must be copied manually to the right sub-directory.
+
 To start the evaluation process:
 
 ```
-python run_evaluation.py --src resources/results/tweets_test_vecs600.vec
+python run_evaluation.py --src resources/clustering_results
 ```
 
-## Generate text files with the tweets for each cluster
+### Generate text files with the tweets for each cluster
 
 With `cluster_to_tweets.py` it is possible to apply a clustering result on the original (raw) tweets. It generates a text file for each cluster containing the original tweets of the instances that are assigned to this cluster.
 
