@@ -1,5 +1,7 @@
 # Data Mining Clustering Project (UPV)
 
+This is a text mining project for clustering tweets using the Sentiment140 data set. There is a [final report](docs/report.pdf) available.
+
 ## Requirements
 
 ### Software
