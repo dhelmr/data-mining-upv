@@ -17,11 +17,16 @@ def main(dest, clean, kmeans):
     for cluster in result.instances_by_cluster:
         instances = result.instances_by_cluster[cluster]
         tweets = [load_tweet(original, i) for i in instances]
+        pos_perc = get_positive_count(original, instances) / len(instances) * 100
         file_name = write_to_file(dest, cluster, tweets)
-        print(f"Wrote {len(tweets)} tweets to {file_name}")
+        print(f"Wrote {len(tweets)} tweets to {file_name}; positive: {pos_perc}%")
 
 def load_tweet(table, index):
     return table["original"][index]
+
+def get_positive_count(table, instances) -> int:
+    pos_count = sum(int((table["label"][instance])) for instance in instances) # positive tweets have label=1, negative label=0
+    return pos_count
     
 def write_to_file(destination, cluster_label, tweets):
     file_name = path.join(destination, str(cluster_label)+".txt")
